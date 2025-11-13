@@ -22,6 +22,8 @@ CREATE TABLE Cursos(
 	costo DECIMAL(10,2),
 	estado_curso VARCHAR(20)
 		CHECK (estado_curso IN ('Activo','Finalizado','Cancelado')),
+	capacidad INT,
+	cupo_ocupado INT,
 	fecha_inicio DATE,
 	fecha_fin DATE
 );
@@ -165,3 +167,4 @@ CREATE TABLE Aud_Act_Instruc(
 	descripcion TEXT
 
 );
+
