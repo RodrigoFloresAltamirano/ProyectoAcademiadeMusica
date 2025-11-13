@@ -17,7 +17,7 @@ CREATE TABLE Cursos(
 	curso_id INT PRIMARY KEY IDENTITY(1,1),
 	nombre_curso VARCHAR(100),
 	nivel VARCHAR(50)
-		CHECK(nivel IN ('Básico','Intermedio','Avanzado')),
+		CHECK(nivel IN ('BÃ¡sico','Intermedio','Avanzado')),
 	duracion_semanas INT,
 	costo DECIMAL(10,2),
 	estado_curso VARCHAR(20)
@@ -68,9 +68,10 @@ CREATE TABLE Detalle_Inscripciones(
 
 CREATE TABLE Aud_Log_Inscrip(
 	auditoria_id INT PRIMARY KEY IDENTITY(1,1),
-	tabla_afectada VARCHAR(50),
+	tabla_afectada VARCHAR(50)
+		CHECK (tabla_afectada IN ('Inscripciones')),
 	accion VARCHAR(50)
-	CHECK (accion IN ('INSERT')),
+		CHECK (accion IN ('INSERT')),
 	usuario VARCHAR(50),
 	fecha_cambio DATETIME DEFAULT GETDATE(),
 	descripcion TEXT
@@ -78,9 +79,10 @@ CREATE TABLE Aud_Log_Inscrip(
 
 CREATE TABLE Aud_Elim_Inscrip(
 	auditoria_id INT PRIMARY KEY IDENTITY(1,1),
-	tabla_afectada VARCHAR(50),
+	tabla_afectada VARCHAR(50)
+		CHECK (tabla_afectada IN ('Inscripciones')),
 	accion VARCHAR(50)
-	CHECK (accion IN ('DELETE')),
+		CHECK (accion IN ('DELETE')),
 	usuario VARCHAR(50),
 	fecha_cambio DATETIME DEFAULT GETDATE(),
 	descripcion TEXT
@@ -88,9 +90,10 @@ CREATE TABLE Aud_Elim_Inscrip(
 
 CREATE TABLE Aud_Act_Inscrip(
 	auditoria_id INT PRIMARY KEY IDENTITY(1,1),
-	tabla_afectada VARCHAR(50),
+	tabla_afectada VARCHAR(50)
+		CHECK (tabla_afectada IN ('Inscripciones')),
 	accion VARCHAR(50)
-	CHECK (accion IN ('UPDATE')),
+		CHECK (accion IN ('UPDATE')),
 	usuario VARCHAR(50),
 	fecha_cambio DATETIME DEFAULT GETDATE(),
 	descripcion TEXT
@@ -98,9 +101,10 @@ CREATE TABLE Aud_Act_Inscrip(
 
 CREATE TABLE Aud_Log_Cursos(
 	auditoria_id INT PRIMARY KEY IDENTITY(1,1),
-	tabla_afectada VARCHAR(50),
+	tabla_afectada VARCHAR(50)
+		CHECK (tabla_afectada IN ('Cursos')),
 	accion VARCHAR(50)
-	CHECK (accion IN ('INSERT')),
+		CHECK (accion IN ('INSERT')),
 	usuario VARCHAR(50),
 	fecha_cambio DATETIME DEFAULT GETDATE(),
 	descripcion TEXT
@@ -108,9 +112,10 @@ CREATE TABLE Aud_Log_Cursos(
 
 CREATE TABLE Aud_Elim_Cursos(
 	auditoria_id INT PRIMARY KEY IDENTITY(1,1),
-	tabla_afectada VARCHAR(50),
+	tabla_afectada VARCHAR(50)
+		CHECK (tabla_afectada IN ('Cursos')),
 	accion VARCHAR(50)
-	CHECK (accion IN ('DELETE')),
+		CHECK (accion IN ('DELETE')),
 	usuario VARCHAR(50),
 	fecha_cambio DATETIME DEFAULT GETDATE(),
 	descripcion TEXT
@@ -118,9 +123,10 @@ CREATE TABLE Aud_Elim_Cursos(
 
 CREATE TABLE Aud_Act_Cursos(
 	auditoria_id INT PRIMARY KEY IDENTITY(1,1),
-	tabla_afectada VARCHAR(50),
+	tabla_afectada VARCHAR(50)
+		CHECK (tabla_afectada IN ('Cursos')),
 	accion VARCHAR(50)
-	CHECK (accion IN ('UPDATE')),
+		CHECK (accion IN ('UPDATE')),
 	usuario VARCHAR(50),
 	fecha_cambio DATETIME DEFAULT GETDATE(),
 	descripcion TEXT
@@ -128,9 +134,10 @@ CREATE TABLE Aud_Act_Cursos(
 
 CREATE TABLE Aud_Log_Instruc(
 	auditoria_id INT PRIMARY KEY IDENTITY(1,1),
-	tabla_afectada VARCHAR(50),
+	tabla_afectada VARCHAR(50)
+		CHECK (tabla_afectada IN ('Instructores')),
 	accion VARCHAR(50)
-	CHECK (accion IN ('INSERT')),
+		CHECK (accion IN ('INSERT')),
 	usuario VARCHAR(50),
 	fecha_cambio DATETIME DEFAULT GETDATE(),
 	descripcion TEXT
@@ -138,9 +145,10 @@ CREATE TABLE Aud_Log_Instruc(
 
 CREATE TABLE Aud_Elim_Instruc(
 	auditoria_id INT PRIMARY KEY IDENTITY(1,1),
-	tabla_afectada VARCHAR(50),
+	tabla_afectada VARCHAR(50)
+		CHECK (tabla_afectada IN ('Instructores')),
 	accion VARCHAR(50)
-	CHECK (accion IN ('DELETE')),
+		CHECK (accion IN ('DELETE')),
 	usuario VARCHAR(50),
 	fecha_cambio DATETIME DEFAULT GETDATE(),
 	descripcion TEXT
@@ -148,10 +156,12 @@ CREATE TABLE Aud_Elim_Instruc(
 
 CREATE TABLE Aud_Act_Instruc(
 	auditoria_id INT PRIMARY KEY IDENTITY(1,1),
-	tabla_afectada VARCHAR(50),
+	tabla_afectada VARCHAR(50)
+		CHECK (tabla_afectada IN ('Instructores')),
 	accion VARCHAR(50)
-	CHECK (accion IN ('UPDATE')),
+		CHECK (accion IN ('UPDATE')),
 	usuario VARCHAR(50),
 	fecha_cambio DATETIME DEFAULT GETDATE(),
 	descripcion TEXT
+
 );
