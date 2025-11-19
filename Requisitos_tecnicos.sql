@@ -1,8 +1,8 @@
 use Academia_Musica
--- REQUISITOS T…CNICOS
+-- REQUISITOS T√âCNICOS
 
 --1. TRIGGERS
---ï	ValidaciÛn de disponibilidad de cupos antes de registrar una inscripciÛn.
+---	Validaci√≥n de disponibilidad de cupos antes de registrar una inscripci√≥n.
 CREATE TRIGGER trg_validar_cupos_inscripcion
 ON Inscripciones
 INSTEAD OF INSERT
@@ -23,7 +23,7 @@ BEGIN
     END
     ELSE
     BEGIN
-        -- Insertar la inscripciÛn
+        -- Insertar la inscripci√≥n
         INSERT INTO Inscripciones (alumno_id, curso_id, instructor_id, fecha_inscripcion, metodo_pago, estado_inscripcion, total_pago)
         SELECT alumno_id, curso_id, instructor_id, fecha_inscripcion, 
                metodo_pago, estado_inscripcion, total_pago
@@ -36,8 +36,8 @@ BEGIN
     END
 END;
 
---ï	Registro de auditorÌas autom·ticas al modificar, cancelar o eliminar inscripciones 
---(usando m·s de una tabla de auditorÌa).
+---	Registro de auditor√≠as autom√°ticas al modificar, cancelar o eliminar inscripciones 
+--(usando m√°s de una tabla de auditor√≠a).
 --Trigger insercion inscripciones
 CREATE TRIGGER trg_aud_inscrip_insert
 ON Inscripciones
@@ -45,7 +45,7 @@ AFTER INSERT
 AS 
 BEGIN
 	INSERT INTO Aud_Log_Inscrip(tabla_afectada,tabla_afectada,accion,usuario,descripcion)
-	SELECT 'Inscripciones','INSERT',SYSTEM_USER,'Nueva inscripciÛn registrada';
+	SELECT 'Inscripciones','INSERT',SYSTEM_USER,'Nueva inscripci√≥n registrada';
 END;
 --Trigger eliminacion inscripciones
 CREATE TRIGGER trg_aud_inscrip_delete
@@ -54,7 +54,7 @@ AFTER DELETE
 AS
 BEGIN
 	INSERT INTO Aud_Elim_Inscrip(tabla_afectada,tabla_afectada,accion,usuario,descripcion)
-	SELECT 'Inscripciones','DELETE',SYSTEM_USER,'InscripciÛn eliminada'
+	SELECT 'Inscripciones','DELETE',SYSTEM_USER,'Inscripci√≥n eliminada'
 END;
 --Trigger actualizacion inscripciones
 CREATE TRIGGER trg_aud_inscripciones_update
@@ -68,7 +68,7 @@ BEGIN
         'UPDATE' AS accion,
         SYSTEM_USER AS usuario,
         CONCAT(
-            'Se actualizÛ la inscripciÛn ID=', i.inscripcion_id,
+            'Se actualiz√≥ la inscripci√≥n ID=', i.inscripcion_id,
             '. Estado previo: ', d.estado_inscripcion,
             ', Estado nuevo: ', i.estado_inscripcion,
             '. Pago previo: ', d.total_pago,
@@ -79,7 +79,7 @@ BEGIN
 END;
 
 
---ï	ActualizaciÛn autom·tica del estado del curso (Activo, Finalizado, Cancelado).
+---	Actualizaci√≥n autom√°tica del estado del curso (Activo, Finalizado, Cancelado).
 CREATE TRIGGER trg_actualizar_estado_curso
 ON Cursos
 AFTER UPDATE
@@ -125,7 +125,7 @@ BEGIN
 END;
 
 
---ï	GeneraciÛn de alertas por baja demanda de cursos o exceso de cupos vacÌos.
+---	Generaci√≥n de alertas por baja demanda de cursos o exceso de cupos vac√≠os.
 CREATE TRIGGER trg_alerta_baja_demanda
 ON Cursos
 AFTER UPDATE
@@ -167,20 +167,20 @@ BEGIN CATCH
     VALUES('Inscripciones','ERROR',SYSTEM_USER,ERROR_MESSAGE());
 END CATCH;
 
--- 7. Õndices y Sequence (10%)
+-- 7. √çndices y Sequence (10%)
 
--- Õndice ˙nico en email de Alumnos
+-- √≠ndice √∫nico en email de Alumnos
 CREATE UNIQUE INDEX IX_Alumnos_Email ON Alumnos (email);
 
--- Õndices en estado_curso, fecha_inscripcion y nombre_curso
+-- √çndices en estado_curso, fecha_inscripcion y nombre_curso
 CREATE NONCLUSTERED INDEX IX_Cursos_Estado ON Cursos (estado_curso);
 CREATE NONCLUSTERED INDEX IX_Inscripciones_Fecha ON Inscripciones (fecha_inscripcion);
 CREATE NONCLUSTERED INDEX IX_Cursos_Nombre ON Cursos (nombre_curso);
 
--- Õndice compuesto en (curso_id, fecha_inicio) para reportes por periodo
+-- √çndice compuesto en (curso_id, fecha_inicio) para reportes por periodo
 CREATE INDEX IX_Cursos_Periodo ON Cursos (curso_id, fecha_inicio);
 
--- Õndice ˙nico en numero_documento (asumiendo que es ˙nico por alumno)
+-- √çndice √∫nico en numero_documento (asumiendo que es √∫nico por alumno)
 CREATE UNIQUE INDEX UX_Alumnos_Doc ON Alumnos (numero_documento);
 
 --8. Errores
