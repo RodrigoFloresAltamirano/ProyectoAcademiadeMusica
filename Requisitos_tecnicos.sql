@@ -150,6 +150,10 @@ BEGIN
 END;
 
 --2. TRANSACCIONES
+--Proceso completo de inscripción (Inscripciones + Detalle_Inscripciones) dentro de una transacción atómica.
+--Cancelación de inscripción con reversión de cupo disponible en el curso.
+--Uso de COMMIT y ROLLBACK para mantener la integridad de los datos.
+--Manejo de errores con TRY/CATCH y registro en la auditoría.
 BEGIN TRY
     BEGIN TRANSACTION;
 
@@ -166,6 +170,329 @@ BEGIN CATCH
     INSERT INTO Auditoria(tabla_afectada,accion,usuario,descripcion)
     VALUES('Inscripciones','ERROR',SYSTEM_USER,ERROR_MESSAGE());
 END CATCH;
+--3. Procedimientos Almacenados (10%)
+--Registrar una nueva inscripción con validación de cupos e información del alumno.
+
+CREATE PROCEDURE registrar_inscripcion
+@alumno_id INT,
+@curso_id INT,
+@instructor_id INT,
+@fecha_inscripcion DATE,
+@metodo_pago VARCHAR(30),
+@estado_inscripcion VARCHAR(20),
+@total_pago DECIMAL(10,2),
+@concepto VARCHAR(50),
+@cantidad INT,
+@precio_unitario DECIMAL(10,2),
+@subtotal DECIMAL(10,2)
+AS
+BEGIN
+	BEGIN TRY
+		BEGIN TRANSACTION
+			
+		--VALIDACIÓN DE CUPO DISPONIBLE
+		DECLARE @cupo_disponible INT;
+        SELECT @cupo_disponible = capacidad - cupo_ocupado 
+        FROM Cursos 
+        WHERE curso_id = @curso_id;
+
+		IF @cupo_disponible <= 0
+		BEGIN
+			RAISERROR('No hay cupos disponibles para este curso',16,1)
+			ROLLBACK TRANSACTION
+			RETURN;
+		END;
+
+		--Insertar inscripcion personal
+		INSERT INTO Inscripciones(alumno_id,curso_id,instructor_id,
+			fecha_inscripcion,metodo_pago,estado_inscripcion,total_pago)
+		VALUES(@alumno_id,@curso_id,@instructor_id,@fecha_inscripcion,@metodo_pago,
+			@estado_inscripcion,@total_pago)
+
+		DECLARE @inscripcion_id INT = SCOPE_IDENTITY();
+
+		-- Insertar detalles de inscripción
+        INSERT INTO Detalle_Inscripciones (inscripcion_id, concepto, cantidad,
+			precio_unitario, subtotal)
+        VALUES(@inscripcion_id, @concepto, @cantidad, @precio_unitario, @subtotal)
+        
+        -- Actualizar cupo ocupado
+        UPDATE Cursos 
+        SET cupo_ocupado = cupo_ocupado + 1 
+        WHERE curso_id = @curso_id;
+		
+		-- Registrar en auditoría
+        INSERT INTO Aud_Log_Inscrip (tabla_afectada, accion, usuario, descripcion)
+        VALUES ('Inscripciones', 'INSERT', SYSTEM_USER, 
+                'Nueva inscripción ID: ' + CAST(@inscripcion_id AS VARCHAR(10)));
+		
+        COMMIT TRANSACTION;        
+        PRINT 'Inscripción realizada exitosamente. ID: ' + CAST(@inscripcion_id AS VARCHAR);
+		
+	END TRY
+
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+        ROLLBACK TRANSACTION;
+
+        -- Registrar error
+        INSERT INTO Errores(usuario_error, procedimiento_error, mensaje_error)
+        VALUES (SYSTEM_USER, 'registrar_inscripcion', ERROR_MESSAGE());
+        
+		DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        RAISERROR('Error en el proceso de inscripción: %s', 16, 1, @ErrorMessage)
+    END CATCH
+END;
+
+--•	Cancelación de inscripción con reversión de cupo disponible en el curso.
+--•	Uso de COMMIT y ROLLBACK para mantener la integridad de los datos.
+--•	Manejo de errores con TRY/CATCH y registro en la auditoría.
+CREATE PROCEDURE cancelar_inscripcion
+@inscripcion_id INT
+AS
+BEGIN
+	BEGIN TRY
+		BEGIN TRANSACTION
+
+		DECLARE @curso_id INT, @estado_actual VARCHAR(20)
+
+		SELECT @curso_id = curso_id, @estado_actual = estado_inscripcion
+		FROM Inscripciones
+		WHERE inscripcion_id = @inscripcion_id
+		
+		IF @estado_actual = 'Cancelada'
+		BEGIN 
+			RAISERROR('La inscripción ya esta cancelada',16,1)
+			ROLLBACK;
+			RETURN;
+		END
+
+		--Actualizar estado de inscripcion
+		UPDATE Inscripciones
+		SET estado_inscripcion = 'Cancelada'
+		WHERE inscripcion_id = @inscripcion_id
+
+		--Liberar cupo
+		UPDATE Cursos
+		SET cupo_ocupado = cupo_ocupado - 1 
+        WHERE curso_id = @curso_id;
+        
+        COMMIT TRANSACTION;
+        
+        PRINT 'Inscripción cancelada exitosamente';
+        
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRANSACTION;
+        
+        INSERT INTO Errores(usuario_error, procedimiento_error, mensaje_error)
+        VALUES (SYSTEM_USER, 'SP_Cancelar_Inscripcion', ERROR_MESSAGE());
+        
+		DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE()
+        RAISERROR('Error al cancelar inscripción: %s', 16, 1, @ErrorMessage);
+    END CATCH
+END;
+
+
+--•	Consultar el historial de cursos tomados por un alumno.
+CREATE OR ALTER PROCEDURE historial_alumno
+@alumno_id INT
+AS
+BEGIN
+    SELECT i.inscripcion_id,
+           c.nombre_curso,
+           c.nivel,
+           i.fecha_inscripcion,
+           i.estado_inscripcion,
+           i.total_pago
+    FROM Inscripciones i
+    JOIN Cursos c ON c.curso_id = i.curso_id
+    WHERE i.alumno_id = @alumno_id
+    ORDER BY i.fecha_inscripcion DESC;
+END;
+
+--•	Generar reportes de cursos más solicitados o instructores con más inscripciones.
+CREATE PROCEDURE CursosMasSolicitados
+AS
+BEGIN
+    SELECT TOP 5 C.curso_id, C.nombre_curso, COUNT(I.inscripcion_id) as total_inscripciones
+    FROM Cursos C
+    INNER JOIN Inscripciones I ON C.curso_id = I.curso_id
+    GROUP BY C.curso_id, C.nombre_curso
+    ORDER BY total_inscripciones DESC;
+END;
+
+--•	Actualizar la disponibilidad de cupos por curso.
+CREATE PROCEDURE ActualizarCupoCurso
+    @curso_id INT,
+    @capacidad INT
+AS
+BEGIN
+    UPDATE Cursos
+    SET capacidad = @capacidad
+    WHERE curso_id = @curso_id;
+END;
+
+SELECT * FROM Cursos
+--•	Aplicar descuentos por promociones o alumno recurrente.
+CREATE PROCEDURE SP_AplicarDescuento
+    @inscripcion_id INT,
+    @porcentaje_descuento DECIMAL(5,2)
+AS
+BEGIN
+    BEGIN TRANSACTION;
+
+    UPDATE Inscripciones
+    SET total_pago = total_pago * (1 - @porcentaje_descuento/100)
+    WHERE inscripcion_id = @inscripcion_id;
+
+    UPDATE Detalle_Inscripciones
+    SET precio_unitario = precio_unitario * (1 - @porcentaje_descuento/100),
+        subtotal = cantidad * (precio_unitario * (1 - @porcentaje_descuento/100))
+    WHERE inscripcion_id = @inscripcion_id;
+
+    COMMIT TRANSACTION;
+END;
+
+--4. Tablas de Auditoría (10%)
+--Registro automático de cambios en Inscripciones, Cursos e Instructores.
+--Registro de usuario, fecha y tipo de cambio (INSERT, UPDATE, DELETE).
+--Conservación de valores previos y nuevos en campos auditados.
+--Uso de múltiples tablas de auditoría, no una sola centralizada.
+CREATE TABLE Aud_Log_Inscrip(
+	auditoria_id INT PRIMARY KEY IDENTITY(1,1),
+	tabla_afectada VARCHAR(50)
+		CHECK (tabla_afectada IN ('Inscripciones')),
+	accion VARCHAR(50)
+		CHECK (accion IN ('INSERT')),
+	usuario VARCHAR(50),
+	fecha_cambio DATETIME DEFAULT GETDATE(),
+	descripcion TEXT
+);
+
+CREATE TABLE Aud_Elim_Inscrip(
+	auditoria_id INT PRIMARY KEY IDENTITY(1,1),
+	tabla_afectada VARCHAR(50)
+		CHECK (tabla_afectada IN ('Inscripciones')),
+	accion VARCHAR(50)
+		CHECK (accion IN ('DELETE')),
+	usuario VARCHAR(50),
+	
+	fecha_cambio DATETIME DEFAULT GETDATE(),
+	descripcion TEXT
+);
+
+CREATE TABLE Aud_Act_Inscrip(
+	auditoria_id INT PRIMARY KEY IDENTITY(1,1),
+	tabla_afectada VARCHAR(50)
+		CHECK (tabla_afectada IN ('Inscripciones')),
+	accion VARCHAR(50)
+		CHECK (accion IN ('UPDATE')),
+	usuario VARCHAR(50),
+	fecha_cambio DATETIME DEFAULT GETDATE(),
+	descripcion TEXT
+);
+
+CREATE TABLE Aud_Log_Cursos(
+	auditoria_id INT PRIMARY KEY IDENTITY(1,1),
+	tabla_afectada VARCHAR(50)
+		CHECK (tabla_afectada IN ('Cursos')),
+	accion VARCHAR(50)
+		CHECK (accion IN ('INSERT')),
+	usuario VARCHAR(50),
+	fecha_cambio DATETIME DEFAULT GETDATE(),
+	descripcion TEXT
+);
+
+
+CREATE TABLE Aud_Elim_Cursos(
+	auditoria_id INT PRIMARY KEY IDENTITY(1,1),
+	tabla_afectada VARCHAR(50),
+		CHECK (tabla_afectada IN ('Cursos')),
+	accion VARCHAR(50)
+		CHECK (accion IN ('DELETE')),
+	usuario VARCHAR(50),
+	fecha_cambio DATETIME DEFAULT GETDATE(),
+	descripcion TEXT
+);
+
+CREATE TABLE Aud_Act_Cursos(
+	auditoria_id INT PRIMARY KEY IDENTITY(1,1),
+	tabla_afectada VARCHAR(50)
+		CHECK (tabla_afectada IN ('Cursos')),
+	accion VARCHAR(50)
+		CHECK (accion IN ('UPDATE')),
+	usuario VARCHAR(50),
+	fecha_cambio DATETIME DEFAULT GETDATE(),
+	descripcion TEXT
+);
+
+CREATE TABLE Aud_Log_Instruc(
+	auditoria_id INT PRIMARY KEY IDENTITY(1,1),
+	tabla_afectada VARCHAR(50)
+		CHECK (tabla_afectada IN ('Instructores')),
+	accion VARCHAR(50)
+		CHECK (accion IN ('INSERT')),
+	usuario VARCHAR(50),
+	fecha_cambio DATETIME DEFAULT GETDATE(),
+	descripcion TEXT
+);
+
+CREATE TABLE Aud_Elim_Instruc(
+	auditoria_id INT PRIMARY KEY IDENTITY(1,1),
+	tabla_afectada VARCHAR(50)
+		CHECK (tabla_afectada IN ('Instructores')),
+	accion VARCHAR(50)
+		CHECK (accion IN ('DELETE')),
+	usuario VARCHAR(50),
+	fecha_cambio DATETIME DEFAULT GETDATE(),
+	descripcion TEXT
+);
+
+CREATE TABLE Aud_Act_Instruc(
+	auditoria_id INT PRIMARY KEY IDENTITY(1,1),
+	tabla_afectada VARCHAR(50)
+		CHECK (tabla_afectada IN ('Instructores')),
+	accion VARCHAR(50)
+		CHECK (accion IN ('UPDATE')),
+	usuario VARCHAR(50),
+	fecha_cambio DATETIME DEFAULT GETDATE(),
+	descripcion TEXT
+);
+
+--5. Secuencias (10%)
+--•	Generación automática de IDs únicos en alumnos, cursos e inscripciones.
+--•	Uso de secuencias o campos IDENTITY según el motor SQL.
+--•	Control de numeración secuencial para trazabilidad de registros.
+
+--SE USARON CAMPOS IDENTITY
+
+
+-- 6. Técnicas Avanzadas (10%)
+--•	PIVOT: Reporte de número de inscripciones por mes y por curso.
+CREATE PROCEDURE InscripcionesPorMes2025
+AS
+BEGIN
+	SELECT *
+	FROM
+	(
+		SELECT c.nombre_curso,
+			   DATENAME(MONTH, i.fecha_inscripcion) + ' ' + CAST(YEAR(i.fecha_inscripcion) AS VARCHAR(4)) AS Mes,
+			   1 AS Cantidad
+		FROM Inscripciones i
+		JOIN Cursos c ON i.curso_id = c.curso_id
+		WHERE i.fecha_inscripcion >= DATEADD(MONTH, -11, GETDATE())
+	) AS Fuente
+	PIVOT
+	(
+		SUM(Cantidad)
+		FOR Mes IN (
+			[Enero 2025], [Febrero 2025], [Marzo 2025], [Abril 2025], [Mayo 2025],
+			[Junio 2025],[Julio 2025], [Agosto 2025], [Septiembre 2025], [Octubre 2025], 
+			[Noviembre 2025], [Diciembre 2025]
+		)
+	) AS Pvt
+END;
 
 -- 7. Índices y Sequence (10%)
 
@@ -190,4 +517,5 @@ CREATE TABLE Errores(
 	usuario_error VARCHAR(50),
 	procedimiento_error VARCHAR(50),
 	mensaje_error VARCHAR(MAX)
+
 );
