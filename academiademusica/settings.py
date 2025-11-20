@@ -20,7 +20,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-^4by)28+n4c9&c(e#3=i)c4!l0vs@ow32v!@^95c23fgmnpcp9'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -72,12 +71,6 @@ WSGI_APPLICATION = 'academiademusica.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
 
 
 # Password validation
@@ -120,3 +113,16 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# settings.py (Este archivo SÍ se sube)
+# ... todo el resto de la configuración ...
+
+# >>> LÓGICA DE CONFIGURACIÓN LOCAL (al final del archivo) <<<
+try:
+    # Intenta importar la configuración local y sensible
+    from .settings_local import *
+except ImportError:
+    # Si el archivo settings_local.py no existe, usa valores por defecto o genera un error
+    # Aquí puedes definir valores de base de datos 'dummy' para que la aplicación no falle si falta el archivo.
+    print("ADVERTENCIA: settings_local.py no encontrado. Usando configuración por defecto/insegura.")
+    pass # La configuración por defecto se usará si no se encuentra settings_local

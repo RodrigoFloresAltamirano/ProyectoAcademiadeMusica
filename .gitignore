@@ -1,0 +1,20 @@
+# DIRECTORIOS Y ARCHIVOS ESPECÍFICOS DE PYTHON/DJANGO
+
+# Entornos virtuales
+venv/
+.venv/
+env/
+
+# Archivos compilados de Python
+__pycache__/
+*.pyc
+
+# Archivos de base de datos local de SQLite
+*.sqlite3
+
+# DIRECTORIOS DE CARGA (si aplica)
+media/
+static_files/
+
+# CRÍTICO: Archivo de configuración local que contiene credenciales
+academiamusica/settings_local.py
