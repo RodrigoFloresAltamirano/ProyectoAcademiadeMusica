@@ -1,0 +1,14 @@
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+<h1>{{curso}}</h1>
+
+{% for inscripcion in inscripciones %}
+
+<div class ="card">
+    <h1>{{task.title}}</h1>
+</div>
+
+{% endfor %}
+
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends 'layouts/base.html' %}
+
+{% block content %}
+
+<h1>Inscripciones</h1>
+
+{% for task in tasks %}<!--se puede llamar x, y pero la variable segunda debe ser tasks forzosamente-->
+
+<!-- Comentario que si se va a ver en HTML-->
+{# note: esta es una inscripcion #}
+<div>
+    <h1>{% if inscripcion.done == False %}⏲{% else %}✅{%  endif %}{{inscripcion.title}} </h1>
+
+    {% if inscripcion.done == False %}
+    <p>Inscripcion pendiente</p>
+    {% else %}
+    <p>Inscripcion realizada</p>
+    {%  endif %}
+
+
+
+    <p>{{inscripcion.description}}</p>
+    <p>Curso: {{inscripcion.curso.}}</p>
+    <button>
+        Delete
+    </button>
+    <button>
+        ✅ Done
+    </button>
+</div>
+
+{% endfor %}
+
+{% endblock %}
