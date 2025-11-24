@@ -214,7 +214,7 @@ ON Inscripciones
 AFTER INSERT 
 AS 
 BEGIN
-	INSERT INTO Aud_Log_Inscrip(tabla_afectada,tabla_afectada,accion,usuario,descripcion)
+	INSERT INTO Aud_Log_Inscrip(tabla_afectada,accion,usuario,descripcion)
 	SELECT 'Inscripciones','INSERT',SYSTEM_USER,'Nueva inscripción registrada';
 END;
 --Trigger eliminacion inscripciones
@@ -223,7 +223,7 @@ ON Inscripciones
 AFTER DELETE
 AS
 BEGIN
-	INSERT INTO Aud_Elim_Inscrip(tabla_afectada,tabla_afectada,accion,usuario,descripcion)
+	INSERT INTO Aud_Elim_Inscrip(tabla_afectada,accion,usuario,descripcion)
 	SELECT 'Inscripciones','DELETE',SYSTEM_USER,'Inscripción eliminada'
 END;
 --Trigger actualizacion inscripciones
@@ -698,4 +698,5 @@ CREATE TABLE Errores(
 	procedimiento_error VARCHAR(50),
 	mensaje_error VARCHAR(MAX)
 );
+
 
