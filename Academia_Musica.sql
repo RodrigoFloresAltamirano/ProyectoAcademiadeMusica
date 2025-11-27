@@ -778,18 +778,18 @@ SELECT * FROM Alumnos
 -- Insercion de Alumnos (12 alumnos, uno por cada mes)
 INSERT INTO Alumnos (nombre_completo, email, telefono, direccion, tipo_documento, numero_documento, fecha_registro)
 VALUES
-('Ana Enero', 'ana.enero@example.com', '5511111111', 'Calle 1', 'INE', 'DOC001', '2025-01-10'),
-('Bruno Febrero', 'bruno.febrero@example.com', '5522222222', 'Calle 2', 'Pasaporte', 'DOC002', '2025-02-12'),
-('Carla Marzo', 'carla.marzo@example.com', '5533333333', 'Calle 3', 'INE', 'DOC003', '2025-03-05'),
-('Daniel Abril', 'daniel.abril@example.com', '5544444444', 'Calle 4', 'INE', 'DOC004', '2025-04-08'),
-('Elena Mayo', 'elena.mayo@example.com', '5555555555', 'Calle 5', 'Pasaporte', 'DOC005', '2025-05-15'),
-('Fernando Junio', 'fernando.junio@example.com', '5566666666', 'Calle 6', 'INE', 'DOC006', '2025-06-20'),
-('Gabriela Julio', 'gabriela.julio@example.com', '5577777777', 'Calle 7', 'INE', 'DOC007', '2025-07-25'),
-('Hugo Agosto', 'hugo.agosto@example.com', '5588888888', 'Calle 8', 'Pasaporte', 'DOC008', '2025-08-18'),
-('Isabel Septiembre', 'isabel.septiembre@example.com', '5599999999', 'Calle 9', 'INE', 'DOC009', '2025-09-09'),
-('Jorge Octubre', 'jorge.octubre@example.com', '5510101010', 'Calle 10', 'INE', 'DOC010', '2025-10-11'),
-('Karen Noviembre', 'karen.noviembre@example.com', '5512121212', 'Calle 11', 'Pasaporte', 'DOC011', '2025-11-13'),
-('Luis Diciembre', 'luis.diciembre@example.com', '5513131313', 'Calle 12', 'INE', 'DOC012', '2025-12-21');
+('Ana Guevara', 'ana.enero@example.com', '5511111111', 'Calle 1', 'INE', 'DOC001', '2025-01-10'),
+('Bruno Fernández', 'bruno.febrero@example.com', '5522222222', 'Calle 2', 'Pasaporte', 'DOC002', '2025-02-12'),
+('Carla Montana', 'carla.marzo@example.com', '5533333333', 'Calle 3', 'INE', 'DOC003', '2025-03-05'),
+('Daniel Arriaga', 'daniel.abril@example.com', '5544444444', 'Calle 4', 'INE', 'DOC004', '2025-04-08'),
+('Elena Montoya', 'elena.mayo@example.com', '5555555555', 'Calle 5', 'Pasaporte', 'DOC005', '2025-05-15'),
+('Fernando Jimenez', 'fernando.junio@example.com', '5566666666', 'Calle 6', 'INE', 'DOC006', '2025-06-20'),
+('Gabriela Jaramillo', 'gabriela.julio@example.com', '5577777777', 'Calle 7', 'INE', 'DOC007', '2025-07-25'),
+('Hugo Arrieta', 'hugo.agosto@example.com', '5588888888', 'Calle 8', 'Pasaporte', 'DOC008', '2025-08-18'),
+('Isabel Sánchez', 'isabel.septiembre@example.com', '5599999999', 'Calle 9', 'INE', 'DOC009', '2025-09-09'),
+('Jorge Ortega', 'jorge.octubre@example.com', '5510101010', 'Calle 10', 'INE', 'DOC010', '2025-10-11'),
+('Karen Navarro', 'karen.noviembre@example.com', '5512121212', 'Calle 11', 'Pasaporte', 'DOC011', '2025-11-13'),
+('Luis Dominguez', 'luis.diciembre@example.com', '5513131313', 'Calle 12', 'INE', 'DOC012', '2025-12-21');
 
 SELECT * FROM Instructores
 -- Insercion de Instructores (3 instructores)
@@ -826,3 +826,4 @@ VALUES
 (12, 3, 3, '2025-12-21', 'Efectivo', 'Activa', 2000.00);
 
 SELECT * FROM Inscripciones
+
