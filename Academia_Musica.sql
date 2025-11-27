@@ -468,30 +468,6 @@ BEGIN
 END;
 
 
-	--•	Generación de alertas por baja demanda de cursos o exceso de cupos vacíos.
-CREATE TRIGGER trg_alerta_baja_demanda
-ON Cursos
-AFTER UPDATE
-AS
-BEGIN
-    IF UPDATE(cupo_ocupado)
-    BEGIN
-        DECLARE @curso_id INT, @cupo_ocupado INT, @capacidad INT;
-        
-        SELECT @curso_id = curso_id, 
-		@cupo_ocupado = cupo_ocupado, 
-		@capacidad = capacidad
-
-        FROM inserted;
-                
-        IF @cupo_ocupado < 05.0
-        BEGIN
-            PRINT 'ALERTA: Curso ID ' + CAST(@curso_id AS VARCHAR) + 
-			' tiene solo ' + CAST(@cupo_ocupado AS VARCHAR) + 'cupos ocupados';
-        END
-    END
-END;
-
 --2. TRANSACCIONES
 	--Proceso completo de inscripción (Inscripciones + Detalle_Inscripciones) dentro de una transacción atómica.
 	--Cancelación de inscripción con reversión de cupo disponible en el curso.
@@ -826,4 +802,5 @@ VALUES
 (12, 3, 3, '2025-12-21', 'Efectivo', 'Activa', 2000.00);
 
 SELECT * FROM Inscripciones
+
 
