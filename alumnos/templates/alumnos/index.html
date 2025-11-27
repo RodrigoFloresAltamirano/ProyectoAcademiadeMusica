@@ -1,99 +1,128 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
+{% extends "alumnos/base.html" %}
 
-<head>
-    <title>Sistema de administracion de alumnos</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
-
-<body class="d-flex flex-column min-vh-100">
-    <nav class="navbar navbar-expand-lg bg-primary" data-bs-theme="dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">
-                <i class="fa-solid fa-graduation-cap fa-lg"></i> Sistema de Administracion de Alumnos
-            </a>
-            <button class="navbar-toggler collapsed" type="button" data-bs-toggle="collapse"
-                data-bs-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false"
-                aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="navbar-collapse collapse" id="navbarColor01">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="fa-solid fa-list fa-lg"></i> Todos los Alumnos
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="fa-solid fa-plus fa-lg"></i> Agregar Alumno
-                        </a>
-                    </li>
-                </ul>
+{% block body %}
+<h3 class="m-4">Todos los Alumnos</h3>
+<div class="row">
+    <div class="col-12">
+        {% if alumnos %}
+        <div class="card border-light ms-4 me-4 mb-4">
+            <div class="card-header">
+                <i class="fa-solid fa-list fa-lg"></i> Registro de Alumnos
             </div>
-        </div>
-    </nav>
-    <div class="container-fluid">
-        <h3 class="m-4">Todos los Alumnos</h3>
-        <div class="row">
-            <div class="col-12">
-                {% if alumnos %}
-                <div class="card border-light ms-4 me-4 mb-4">
-                    <div class="card-header">
-                        <i class="fa-solid fa-list fa-lg"></i> Registro de Alumnos
-                    </div>
-                    <div class="card-body">
-                        <p class="card-text">
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">numero_alumno</th>
-                                        <th scope="col">nombre</th>
-                                        <th scope="col">apellido</th>
-                                        <th scope="col">correo</th>
-                                        <th scope="col">campo_estudio</th>
-                                        <th scope="col">promedio</th>
-                                        <th scope="col">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for alumno in alumnos %}
-                                    <tr>
-                                        <td>{{ alumno.numero_alumno }}</td>
-                                        <td>{{ alumno.nombre }}</td>
-                                        <td>{{ alumno.apellido }}</td>
-                                        <td>{{ alumno.correo }}</td>
-                                        <td>{{ alumno.campo_estudio }}</td>
-                                        <td>{{ alumno.promedio }}</td>
-                                        <td>ACTIONS</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                        </p>
-                    </div>
+            <div class="card-body">
+                <p class="card-text">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">numero alumno</th>
+                                <th scope="col">nombre</th>
+                                <th scope="col">apellido</th>
+                                <th scope="col">correo</th>
+                                <th scope="col">campo estudio</th>
+                                <th scope="col">promedio</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for alumno in alumnos %}
+                            <tr>
+                                <td>{{ alumno.numero_alumno }}</td>
+                                <td>{{ alumno.nombre }}</td>
+                                <td>{{ alumno.apellido }}</td>
+                                <td>{{ alumno.correo }}</td>
+                                <td>{{ alumno.campo_estudio }}</td>
+                                <td>{{ alumno.promedio }}</td>
+                                <td>
+                                    <button type="button" class="btn-success me-1"
+                                        href="{% url 'view_alumno' alumno.id %}" data-bs-toggle="modal"
+                                        data-bs-target="#myModal{{alumno.id}}">
+                                        <i class="fa-solid fa-circle-info fa-lg"></i>
+                                    </button>
+
+                                    <!--Modal - view Alumno-->
+                                    <div class="modal" id="myModal{{alumno.id}}" tabindex="-1"
+                                        aria-labelledby="myModalLabel1" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">
+                                                        Alumno: {{ alumno.nombre }} {{ alumno.apellido }}
+                                                    </h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close">
+                                                        <span aria-hidden="true"></span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <ul class="list-unstyled">
+                                                        <li>Numero alumno: <strong>{{ alumno.numero_alumno }}</strong>
+                                                        </li>
+                                                        <li>Nombre: <strong>{{ alumno.nombre }}</strong></li>
+                                                        <li>Apellido: <strong>{{ alumno.apellido }}</strong></li>
+                                                        <li>Correo: <strong>{{ alumno.correo }}</strong></li>
+                                                        <li>Campo de estudio: <strong>{{ alumno.campo_estudio
+                                                                }}</strong></li>
+                                                        <li>Promedio: <strong>{{ alumno.promedio }}</strong></li>
+                                                    </ul>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-primary"
+                                                        data-bs-dismiss="modal">Cerrar</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <a class="btn btn-warning me-1" href="{% url 'editar' alumno.id %}">
+                                        <i class="fa-solid fa-pen-to-square fa-lg"></i>
+                                    </a>
+
+                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#eliminar{{alumno.id}}">
+                                        <i class="fa-solid fa-trash-can fa-lg"></i>
+                                    </button>
+
+                                    <!--Modal - eliminar(delete) Alumno-->
+                                    <div class="modal" id="#eliminar{{alumno.id}}" tabindex="-1"
+                                        aria-labelledby="myModalLabel2" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">
+                                                        Alumno: {{ alumno.nombre }} {{ alumno.apellido }}
+                                                    </h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close">
+                                                        <span aria-hidden="true"></span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p> Estas seguro de eliminar al alumno?</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <form action="{% url 'eliminar' alumno.id %}" method="POST">
+                                                        {% csrf_token %}
+                                                        <input type="submit" class="btn btn-primary" value="Delete">
+                                                    </form> 
+                                                    <button type="button" class="btn btn-secondary"
+                                                        data-bs-dismiss="modal">Cancelar</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-                {% else %}
-                <h5 class="alert alert-primary ms-4 me-4">Sin Registro de Alumnos</h5>
-                {% endif %}
-
+                </p>
             </div>
         </div>
-    </div>
-    <footer class="mt-auto mb-4">
-        <div class="text-center">
-            <span>
-                copyright &copy;
-                <script>document.write(new Date().getFullYear())</script> - Academia de Musica.
-            </span>
-        </div>
-    </footer>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</head>
+        {% else %}
+        <h5 class="alert alert-primary ms-4 me-4">Sin Registro de Alumnos</h5>
+        {% endif %}
 
-</html>
+    </div>
+</div>
+{% endblock %}
