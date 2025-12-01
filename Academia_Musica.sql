@@ -19,6 +19,8 @@ CREATE TABLE Alumnos(
 	fecha_registro DATE
 );
 
+SELECT * FROM Alumnos
+
 CREATE TABLE Cursos(
 	curso_id INT PRIMARY KEY IDENTITY(1,1),
 	nombre_curso VARCHAR(100),

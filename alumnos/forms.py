@@ -1,25 +1,28 @@
 from django import forms
-from .models import Alumno
-
+from .models import Alumnos
 
 class AlumnoForm(forms.ModelForm):
     class Meta:
-        model = Alumno
-        fields = ['numero_alumno', 'nombre', 'apellido', 'correo', 'campo_estudio', 'promedio']
+        model = Alumnos
+        fields = ['alumno_id', 'nombre_completo', 'email', 'telefono', 'direccion', 'tipo_documento', 'numero_documento', 'fecha_registro']
         labels = {
-            'numero_alumno': 'Número de Alumno',
-            'nombre': 'Nombre',
-            'apellido': 'Apellido',
-            'correo': 'Correo Electrónico',
-            'campo_estudio': 'Campo de Estudio',
-            'promedio': 'Promedio',
+            'alumno_id': 'alumno id',
+            'nombre_completo': 'nombre completo',
+            'email': 'email',
+            'telefono': 'telefono',
+            'direccion': 'direccion',
+            'tipo_documento': 'tipo documento',
+            'numero_documento': 'numero documento',
+            'fecha_registro': 'fecha registro',
         }
 
         widgets = {
-            'numero_alumno': forms.NumberInput(attrs={'class': 'form-control'}),
-            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
-            'apellido': forms.TextInput(attrs={'class': 'form-control'}),
-            'correo': forms.EmailInput(attrs={'class': 'form-control'}),
-            'campo_estudio': forms.TextInput(attrs={'class': 'form-control'}),
-            'promedio': forms.NumberInput(attrs={'class': 'form-control'}),
+            'alumno_id': forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+            'nombre_completo': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'telefono': forms.TextInput(attrs={'class': 'form-control'}),
+            'direccion': forms.TextInput(attrs={'class': 'form-control'}),
+            'tipo_documento': forms.TextInput(attrs={'class': 'form-control'}),
+            'numero_documento': forms.TextInput(attrs={'class': 'form-control'}),
+            'fecha_registro': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
         }
