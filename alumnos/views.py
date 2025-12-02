@@ -35,8 +35,8 @@ def add(request):
                 email=nuevo_email,
                 telefono=nuevo_telefono,
                 direccion=nuevo_direccion,
-                tipo_documento=nuevo_tipo_documento
-                numero_documento=nuevo_numero_documento
+                tipo_documento=nuevo_tipo_documento,
+                numero_documento=nuevo_numero_documento,
                 fecha_registro=nuevo_fecha_registro
             )
             nuevo_alumno.save()
