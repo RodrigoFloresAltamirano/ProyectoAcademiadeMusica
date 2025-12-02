@@ -475,7 +475,7 @@ END;
 	--Cancelación de inscripción con reversión de cupo disponible en el curso.
 	--Uso de COMMIT y ROLLBACK para mantener la integridad de los datos.
 	--Manejo de errores con TRY/CATCH y registro en la auditoría.
-
+	----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------1
 BEGIN TRY
     BEGIN TRANSACTION;
 
@@ -489,7 +489,7 @@ BEGIN TRY
 END TRY
 BEGIN CATCH
     ROLLBACK TRANSACTION;
-    INSERT INTO Auditoria(tabla_afectada,accion,usuario,descripcion)
+    INSERT INTO Aud_Log_Inscrip(tabla_afectada,accion,usuario,descripcion)
     VALUES('Inscripciones','ERROR',SYSTEM_USER,ERROR_MESSAGE());
 END CATCH;
 
@@ -806,3 +806,8 @@ VALUES
 SELECT * FROM Inscripciones
 
 
+SELECT * FROM Inscripciones
+
+SELECT * FROM Aud_Log_Alumnos
+SELECT * FROM Aud_Log_Cursos
+SELECT * FROM Aud_Log_Inscrip
