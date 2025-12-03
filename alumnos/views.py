@@ -1,8 +1,8 @@
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import reverse
 
-from .models import Alumnos
+from .models import Alumnos, Inscripciones
 from .forms import AlumnoForm
 
 # Create your views here.
@@ -20,34 +20,19 @@ def add(request):
     if request.method == 'POST':
         form = AlumnoForm(request.POST)
         if form.is_valid():
-            nuevo_alumno_id = form.cleaned_data['alumno_id']
-            nuevo_nombre_completo = form.cleaned_data['nombre_completo']
-            nuevo_email = form.cleaned_data['email']
-            nuevo_telefono = form.cleaned_data['telefono']
-            nuevo_direccion = form.cleaned_data['direccion']
-            nuevo_tipo_documento = form.cleaned_data['tipo_documento']
-            nuevo_numero_documento = form.cleaned_data['numero_documento']
-            nuevo_fecha_registro = form.cleaned_data['fecha_registro']
-
-            nuevo_alumno = Alumnos(
-                alumno_id=nuevo_alumno_id,
-                nombre_completo=nuevo_nombre_completo,
-                email=nuevo_email,
-                telefono=nuevo_telefono,
-                direccion=nuevo_direccion,
-                tipo_documento=nuevo_tipo_documento,
-                numero_documento=nuevo_numero_documento,
-                fecha_registro=nuevo_fecha_registro
-            )
-            nuevo_alumno.save()
-            return render(request, 'alumnos/agregar.html', {
-                'form': AlumnoForm(),
-                'success': True
-            })
+            
+            # **CÓDIGO CORREGIDO:** Usar form.save()
+            form.save() 
+            
+            # Redirigir a la vista de índice para ver el nuevo alumno
+            # Es mejor que renderizar el mismo formulario con 'success'
+            return redirect('index') 
+            
     else:
         form = AlumnoForm()
+    
     return render(request, 'alumnos/agregar.html', {
-        'form': AlumnoForm()
+        'form': form
     })
 
 def editar(request, id):
@@ -68,7 +53,27 @@ def editar(request, id):
     })
 
 def eliminar(request, id):
+    # request.POST para asegurar que solo se ejecuta con el botón del modal
     if request.method == 'POST':
-        alumno = Alumnos.objects.get(pk=id)
-        alumno.eliminar()
-    return HttpResponseRedirect(reverse('index'))
+        try:
+            # El ID es alumno_id
+            alumno_id = id 
+            
+            # 1. Obtener el alumno a eliminar
+            alumno = Alumnos.objects.get(pk=alumno_id)
+            
+            # 2. Eliminar registros dependientes
+            #    Esto borra todas las filas en Inscripciones asociadas a este alumno.
+            Inscripciones.objects.filter(alumno_id=alumno_id).delete()
+
+            # 3. Eliminar el alumno (el padre)
+            alumno.delete() 
+
+            return redirect('index')
+        
+        except Alumnos.DoesNotExist:
+            # Si el alumno ya fue eliminado, simplemente redirige.
+            return redirect('index')
+            
+    # Si alguien intenta acceder a eliminar por GET, solo redirige
+    return redirect('index')

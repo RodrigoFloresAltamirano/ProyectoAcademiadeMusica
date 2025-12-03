@@ -18,3 +18,42 @@ class Alumnos(models.Model):
 
 def __str__(self):# Representacion en cadena del objeto Estudiante
     return f'Alumno: {self.nombre_completo}'
+
+# ----------------------------------------------------
+# Modelo para acceder a la tabla Inscripciones
+# ----------------------------------------------------
+class Cursos(models.Model):
+    # modelo para Inscripciones
+    # Solo es necesario definir la PK y la FK.
+    curso_id = models.AutoField(primary_key=True)
+    nombre_curso = models.CharField(max_length=100, blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'Cursos'
+        
+class Instructores(models.Model):
+    instructor_id = models.AutoField(primary_key=True)
+    
+    class Meta:
+        managed = False
+        db_table = 'Instructores'
+        
+class Inscripciones(models.Model):
+    inscripcion_id = models.AutoField(primary_key=True)
+    # Relación con Alumnos
+    alumno = models.ForeignKey(
+        Alumnos, 
+        models.DO_NOTHING, # DO_NOTHING porque la BD ya gestiona la FK
+        db_column='alumno_id', 
+        related_name='inscripciones'
+    )
+    # Relación con Cursos e Instructores
+    curso = models.ForeignKey(Cursos, models.DO_NOTHING, db_column='curso_id')
+    instructor = models.ForeignKey(Instructores, models.DO_NOTHING, db_column='instructor_id')
+    
+    fecha_inscripcion = models.DateField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'Inscripciones'

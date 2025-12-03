@@ -39,13 +39,13 @@
                                 <td>{{ alumno.fecha_registro }}</td>
                                 <td>
                                     <button type="button" class="btn-success me-1"
-                                        href="{% url 'view_alumno' alumno.id %}" data-bs-toggle="modal"
-                                        data-bs-target="#myModal{{alumno.id}}">
+                                        href="{% url 'view_alumno' alumno.alumno_id %}" data-bs-toggle="modal"
+                                        data-bs-target="#myModal{{alumno.alumno_id}}">
                                         <i class="fa-solid fa-circle-info fa-lg"></i>
                                     </button>
 
                                     <!--Modal - view Alumno-->
-                                    <div class="modal" id="myModal{{alumno.id}}" tabindex="-1"
+                                    <div class="modal" id="myModal{{alumno.alumno_id}}" tabindex="-1"
                                         aria-labelledby="myModalLabel1" aria-hidden="true">
                                         <div class="modal-dialog" role="document">
                                             <div class="modal-content">
@@ -65,8 +65,7 @@
                                                         <li>Nombre Completo: <strong>{{ alumno.nombre_completo }}</strong></li>
                                                         <li>Correo: <strong>{{ alumno.email }}</strong></li>
                                                         <li>Telefono: <strong>{{ alumno.telefono }}</strong></li>
-                                                        <li>Direccion: <strong>{{ alumno.direccion
-                                                                }}</strong></li>
+                                                        <li>Direccion: <strong>{{ alumno.direccion }}</strong></li>
                                                         <li>Tipo Documento: <strong>{{ alumno.tipo_documento }}</strong></li>
                                                         <li>No Documento: <strong>{{ alumno.numero_documento }}</strong></li>
                                                         <li>Fecha de Registro: <strong>{{ alumno.fecha_registro }}</strong></li>
@@ -80,16 +79,16 @@
                                         </div>
                                     </div>
 
-                                    <a class="btn btn-warning me-1" href="{% url 'editar' alumno.id %}">
+                                    <a class="btn btn-warning me-1" href="{% url 'editar' alumno.alumno_id %}">
                                         <i class="fa-solid fa-pen-to-square fa-lg"></i>
                                     </a>
 
-                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#eliminar{{alumno.id}}">
+                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#eliminar{{alumno.alumno_id}}">
                                         <i class="fa-solid fa-trash-can fa-lg"></i>
                                     </button>
 
                                     <!--Modal - eliminar(delete) Alumno-->
-                                    <div class="modal" id="#eliminar{{alumno.id}}" tabindex="-1"
+                                    <div class="modal" id="eliminar{{alumno.alumno_id}}" tabindex="-1"
                                         aria-labelledby="myModalLabel2" aria-hidden="true">
                                         <div class="modal-dialog" role="document">
                                             <div class="modal-content">
@@ -106,7 +105,7 @@
                                                     <p> Estas seguro de eliminar al alumno?</p>
                                                 </div>
                                                 <div class="modal-footer">
-                                                    <form action="{% url 'eliminar' alumno.id %}" method="POST">
+                                                    <form action="{% url 'eliminar' alumno.alumno_id %}" method="POST">
                                                         {% csrf_token %}
                                                         <input type="submit" class="btn btn-primary" value="Delete">
                                                     </form> 
