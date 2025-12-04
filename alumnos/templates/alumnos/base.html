@@ -10,8 +10,8 @@
 <body class="d-flex flex-column min-vh-100">
     <nav class="navbar navbar-expand-lg bg-primary" data-bs-theme="dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{% url 'index' %}">
-                <i class="fa-solid fa-graduation-cap fa-lg"></i> Sistema de Administracion de Alumnos
+            <a class="navbar-brand" href="{% url 'home' %}">
+                <i class="fa-solid fa-guitar"></i> Administracion de Alumnos
             </a>
             <button class="navbar-toggler collapsed" type="button" data-bs-toggle="collapse"
                 data-bs-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false"
@@ -22,15 +22,17 @@
             <div class="navbar-collapse collapse" id="navbarColor01">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'index' %}">
+                        <a class="nav-link" href="{% url 'home' %}">
                             <i class="fa-solid fa-list fa-lg"></i> Todos los Alumnos
                         </a>
                     </li>
+                {% if user.is_superuser or 'Administradores' in user.groups.all.0.name %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'agregar' %}">
                             <i class="fa-solid fa-plus fa-lg"></i> Agregar Alumno
                         </a>
                     </li>
+                {% endif %}
                 </ul>
 
                 <div class="d-flex align-items-center">

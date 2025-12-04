@@ -1,0 +1,96 @@
+{% extends "alumnos/base.html" %}
+
+{% block body %}
+<h3 class="m-4">Todos los Alumnos</h3>
+<div class="row">
+    <div class="col-12">
+        {% if alumnos %}
+        <div class="card border-light ms-4 me-4 mb-4">
+            <div class="card-header">
+                <i class="fa-solid fa-list fa-lg"></i> Registro de Alumnos
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">alumno id</th>
+                                <th scope="col">nombre completo</th>
+                                <th scope="col">email</th>
+                                <th scope="col">telefono</th>
+                                <th scope="col">direccion</th>
+                                <th scope="col">tipo documento</th>
+                                <th scope="col">numero documento</th>
+                                <th scope="col">fecha registro</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for alumno in alumnos %}
+                            <tr>
+                                <td>{{ alumno.alumno_id }}</td>
+                                <td>{{ alumno.nombre_completo }}</td>
+                                <td>{{ alumno.email }}</td>
+                                <td>{{ alumno.telefono }}</td>
+                                <td>{{ alumno.direccion }}</td>
+                                <td>{{ alumno.tipo_documento }}</td>
+                                <td>{{ alumno.numero_documento }}</td>
+                                <td>{{ alumno.fecha_registro }}</td>
+                                <td>
+                                    <button type="button" class="btn-success me-1"
+                                        href="{% url 'view_alumno' alumno.alumno_id %}" data-bs-toggle="modal"
+                                        data-bs-target="#myModal{{alumno.alumno_id}}">
+                                        <i class="fa-solid fa-circle-info fa-lg"></i>
+                                    </button>
+
+                                    <!--Modal - view Alumno-->
+                                    <div class="modal" id="myModal{{alumno.alumno_id}}" tabindex="-1"
+                                        aria-labelledby="myModalLabel1" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">
+                                                        Alumno: {{ alumno.nombre_completo }}
+                                                    </h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="Close">
+                                                        <span aria-hidden="true"></span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <ul class="list-unstyled">
+                                                        <li>No Alumno: <strong>{{ alumno.alumno_id }}</strong>
+                                                        </li>
+                                                        <li>Nombre Completo: <strong>{{ alumno.nombre_completo }}</strong></li>
+                                                        <li>Correo: <strong>{{ alumno.email }}</strong></li>
+                                                        <li>Telefono: <strong>{{ alumno.telefono }}</strong></li>
+                                                        <li>Direccion: <strong>{{ alumno.direccion }}</strong></li>
+                                                        <li>Tipo Documento: <strong>{{ alumno.tipo_documento }}</strong></li>
+                                                        <li>No Documento: <strong>{{ alumno.numero_documento }}</strong></li>
+                                                        <li>Fecha de Registro: <strong>{{ alumno.fecha_registro }}</strong></li>
+                                                    </ul>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-primary"
+                                                        data-bs-dismiss="modal">Cerrar</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                </p>
+            </div>
+        </div>
+        {% else %}
+        <h5 class="alert alert-primary ms-4 me-4">Sin Registro de Alumnos</h5>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

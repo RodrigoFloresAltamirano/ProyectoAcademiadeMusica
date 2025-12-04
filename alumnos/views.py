@@ -91,3 +91,19 @@ def eliminar(request, id):
     # Si alguien intenta acceder a eliminar por GET, solo redirige
     return redirect('index')
     pass
+
+@login_required
+def home_redirect(request):
+    # CASO 1: Si es Admin o Superusuario, lo mandamos a la vista 'index' de ESTA app (alumnos)
+    if request.user.is_superuser or request.user.groups.filter(name='Administradores').exists():
+        return redirect('index') 
+    
+    # CASO 2: Si es Instructor, lo mandamos a la vista de la OTRA app (instructores)
+    # 'panel_instructores' es el nombre que le pondremos a la URL en el siguiente paso
+    elif request.user.groups.filter(name='Instructores').exists():
+        return redirect('panel_instructores') 
+    
+    # CASO 3: Si no tiene rol, mostramos error o lo sacamos
+    else:
+        # html simple llamado 'sin_permiso.html' o redirigir al login
+        return render(request, 'alumnos/sin_permiso.html')

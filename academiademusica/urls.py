@@ -23,6 +23,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('alumnos.urls')),  # Incluye las URLs de la aplicación 'alumnos'
 
+# Rutas de instructores
+    path('instructores/', include('instructores.urls')),
 
 # Rutas para autenticacion
     # ruta para el login
