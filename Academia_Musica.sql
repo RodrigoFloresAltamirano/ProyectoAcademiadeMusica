@@ -19,8 +19,6 @@ CREATE TABLE Alumnos(
 	fecha_registro DATE
 );
 
-SELECT * FROM Alumnos
-
 CREATE TABLE Cursos(
 	curso_id INT PRIMARY KEY IDENTITY(1,1),
 	nombre_curso VARCHAR(100),
@@ -259,8 +257,8 @@ AS
 BEGIN
 	INSERT INTO Aud_Log_Inscrip(tabla_afectada,accion,usuario,descripcion)
 	SELECT 'Inscripciones','INSERT',SYSTEM_USER,'Nueva inscripción registrada'
+	FROM inserted
 END;
-
 
 --Trigger eliminacion inscripciones
 CREATE TRIGGER trg_aud_inscrip_delete
@@ -270,8 +268,8 @@ AS
 BEGIN
 	INSERT INTO Aud_Elim_Inscrip(tabla_afectada,accion,usuario,descripcion)
 	SELECT 'Inscripciones','DELETE',SYSTEM_USER,'Inscripción eliminada'
+	FROM deleted
 END;
-
 	
 --Trigger actualizacion inscripciones
 CREATE TRIGGER trg_aud_inscripciones_update
@@ -291,10 +289,9 @@ BEGIN
             '. Pago previo: ', d.total_pago,
             ', Pago nuevo: ', i.total_pago
         ) AS descripcion
-    FROM inserted i
-    INNER JOIN deleted d ON i.inscripcion_id = d.inscripcion_id;
+    FROM deleted d
+    INNER JOIN inserted i ON d.inscripcion_id = i.inscripcion_id;
 END;
-
 
 	--TRIGGER PARA AUD_ALUMNOS
 --Trigger para insercion de alumnos
@@ -305,6 +302,7 @@ AS
 BEGIN
 	INSERT INTO Aud_Log_Alumnos(tabla_afectada,accion,usuario,descripcion)
 	SELECT 'Alumnos','INSERT',SYSTEM_USER,'Nuevo estudiante registado'
+	FROM inserted
 END;
 
 --TRIGGER PARA ELIMINACIÓN DE ALUMNOS
@@ -315,6 +313,7 @@ AS
 BEGIN
 	INSERT INTO Aud_Elim_Alumnos(tabla_afectada,accion,usuario,descripcion)
 	SELECT 'Alumnos','DELETE',SYSTEM_USER,'Alumno elimnado'
+	FROM deleted
 END;
 
 
@@ -346,8 +345,8 @@ BEGIN
 			', Fecha de registro previa',d.fecha_registro,
 			', Fecha de registro nueva',i.fecha_registro
         ) AS descripcion
-    FROM inserted i
-    INNER JOIN deleted d ON i.alumno_id = d.alumno_id;
+    FROM deleted d
+    INNER JOIN inserted i ON d.alumno_id = i.alumno_id;
 END;
 	
 	--TRIGGER PARA AUDITORIA INSTRUCTORES
@@ -359,6 +358,7 @@ AS
 BEGIN
 	INSERT INTO Aud_Log_Instruc(tabla_afectada,accion,usuario,descripcion)
 	SELECT 'Instructores','INSERT',SYSTEM_USER,'Nuevo instructor registado'
+	FROM inserted
 END;
 
 	--Trigger para eliminar instructores
@@ -369,6 +369,7 @@ AS
 BEGIN
 	INSERT INTO Aud_Elim_Instruc(tabla_afectada,accion,usuario,descripcion)
 	SELECT 'Instructores','DELETE',SYSTEM_USER,'Instructor elimnado'
+	FROM deleted
 END;
 
 
@@ -411,6 +412,7 @@ AS
 BEGIN
 	INSERT INTO Aud_Log_Cursos(tabla_afectada,accion,usuario,descripcion)
 	SELECT 'Cursos','INSERT',SYSTEM_USER,'Nuevo curso registrado'
+	FROM inserted
 END;
 
 	--Trigger para eliminar cursos
@@ -421,6 +423,7 @@ AS
 BEGIN
 	INSERT INTO Aud_Elim_Cursos(tabla_afectada,accion,usuario,descripcion)
 	SELECT 'Cursos','DELETE',SYSTEM_USER,'Curso eliminado'
+	FROM deleted
 END;
 
 
@@ -470,12 +473,36 @@ BEGIN
 END;
 
 
+	--•	Generación de alertas por baja demanda de cursos o exceso de cupos vacíos.
+CREATE TRIGGER trg_alerta_baja_demanda
+ON Cursos
+AFTER UPDATE
+AS
+BEGIN
+    IF UPDATE(cupo_ocupado)
+    BEGIN
+        DECLARE @curso_id INT, @cupo_ocupado INT, @capacidad INT;
+        
+        SELECT @curso_id = curso_id, 
+		@cupo_ocupado = cupo_ocupado, 
+		@capacidad = capacidad
+
+        FROM inserted;
+                
+        IF @cupo_ocupado < 05.0
+        BEGIN
+            PRINT 'ALERTA: Curso ID ' + CAST(@curso_id AS VARCHAR) + 
+			' tiene solo ' + CAST(@cupo_ocupado AS VARCHAR) + 'cupos ocupados';
+        END
+    END
+END;
+
 --2. TRANSACCIONES
 	--Proceso completo de inscripción (Inscripciones + Detalle_Inscripciones) dentro de una transacción atómica.
 	--Cancelación de inscripción con reversión de cupo disponible en el curso.
 	--Uso de COMMIT y ROLLBACK para mantener la integridad de los datos.
 	--Manejo de errores con TRY/CATCH y registro en la auditoría.
-	----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------1
+SELECT * FROM Inscripciones
 BEGIN TRY
     BEGIN TRANSACTION;
 
@@ -688,7 +715,10 @@ END;
 --SE USARON CAMPOS IDENTITY
 
 
--- 6. Técnicas Avanzadas (10%)
+-- 6. Técnicas Avanzadas (10%) (FALLA)
+--------------------------------------------------------------------------------------------------------------------
+--FALLA
+--------------------------------------------------------------------------------------------------------------------
 --•	PIVOT: Reporte de número de inscripciones por mes y por curso.
 CREATE PROCEDURE InscripcionesPorMes2025
 AS
@@ -713,7 +743,8 @@ BEGIN
 		)
 	) AS Pvt
 END;
-
+SELECT * FROM Inscripciones
+EXEC InscripcionesPorMes2025
 --•	CASE: Clasificación de alumnos según nivel o frecuencia de participación.
 CREATE PROCEDURE Frecuencia_inscripciones
 AS
@@ -731,15 +762,49 @@ GROUP BY a.alumno_id, a.nombre_completo;
 END;
 
 --•	Subconsultas: Para identificar cursos activos o inscripciones vigentes.
+CREATE PROCEDURE Inscripciones_y_cursos_vigentes
+AS
+BEGIN	
+	SELECT c.curso_id, c.nombre_curso, c.nivel, c.estado_curso,
+		   (SELECT COUNT(*) FROM Inscripciones i 
+		   WHERE i.curso_id = c.curso_id AND i.estado_inscripcion = 'Activa') AS inscripciones_activas
+	FROM Cursos c
+	WHERE c.estado_curso = 'Activo';
+END;
+
+EXEC Inscripciones_y_cursos_vigentes
 
 --•	JOINs: Entre Alumnos, Cursos, Instructores e Inscripciones.
+CREATE PROCEDURE resumen_gral_academia
+AS
+BEGIN
+	SELECT i.inscripcion_id, a.nombre_completo AS alumno, c.nombre_curso, ins.nombre_completo AS instructor, i.fecha_inscripcion, i.total_pago
+	FROM Inscripciones i
+	JOIN Alumnos a ON i.alumno_id = a.alumno_id
+	JOIN Cursos c ON i.curso_id = c.curso_id
+	LEFT JOIN Instructores ins ON i.instructor_id = ins.instructor_id;
+END;
+
+EXEC resumen_gral_academia;
 
 --•	RANKING: Para mostrar el Top 5 cursos más solicitados.
+CREATE PROCEDURE top_cursos_mas_solicitados
+AS
+BEGIN
+	SELECT TOP 5 c.curso_id,
+		   c.nombre_curso,
+		   COUNT(*) AS inscripciones,
+		   DENSE_RANK() OVER (ORDER BY COUNT(*) DESC) AS ranking
+	FROM Inscripciones i
+	JOIN Cursos c ON c.curso_id = i.curso_id
+	GROUP BY c.curso_id, c.nombre_curso
+	ORDER BY inscripciones DESC
+END;
 
-
+EXEC top_cursos_mas_solicitados
 -- 7. Índices y Sequence (10%)
 -- Índice único en email de Alumnos
-CREATE UNIQUE INDEX IX_Alumnos_Email ON Alumnos (email);
+CREATE NONCLUSTERED INDEX IX_Alumnos_Email ON Alumnos (email);
 
 -- Índices en estado_curso, fecha_inscripcion y nombre_curso
 CREATE NONCLUSTERED INDEX IX_Cursos_Estado ON Cursos (estado_curso);
@@ -754,22 +819,33 @@ CREATE UNIQUE INDEX UX_Alumnos_Doc ON Alumnos (numero_documento);
 	
 SELECT * FROM Alumnos
 -- Insercion de Alumnos (12 alumnos, uno por cada mes)
+SELECT * FROM Alumnos
+SELECT * FROM Aud_Log_Alumnos
 INSERT INTO Alumnos (nombre_completo, email, telefono, direccion, tipo_documento, numero_documento, fecha_registro)
 VALUES
-('Ana Guevara', 'ana.enero@example.com', '5511111111', 'Calle 1', 'INE', 'DOC001', '2025-01-10'),
-('Bruno Fernández', 'bruno.febrero@example.com', '5522222222', 'Calle 2', 'Pasaporte', 'DOC002', '2025-02-12'),
-('Carla Montana', 'carla.marzo@example.com', '5533333333', 'Calle 3', 'INE', 'DOC003', '2025-03-05'),
-('Daniel Arriaga', 'daniel.abril@example.com', '5544444444', 'Calle 4', 'INE', 'DOC004', '2025-04-08'),
-('Elena Montoya', 'elena.mayo@example.com', '5555555555', 'Calle 5', 'Pasaporte', 'DOC005', '2025-05-15'),
-('Fernando Jimenez', 'fernando.junio@example.com', '5566666666', 'Calle 6', 'INE', 'DOC006', '2025-06-20'),
-('Gabriela Jaramillo', 'gabriela.julio@example.com', '5577777777', 'Calle 7', 'INE', 'DOC007', '2025-07-25'),
-('Hugo Arrieta', 'hugo.agosto@example.com', '5588888888', 'Calle 8', 'Pasaporte', 'DOC008', '2025-08-18'),
-('Isabel Sánchez', 'isabel.septiembre@example.com', '5599999999', 'Calle 9', 'INE', 'DOC009', '2025-09-09'),
-('Jorge Ortega', 'jorge.octubre@example.com', '5510101010', 'Calle 10', 'INE', 'DOC010', '2025-10-11'),
-('Karen Navarro', 'karen.noviembre@example.com', '5512121212', 'Calle 11', 'Pasaporte', 'DOC011', '2025-11-13'),
-('Luis Dominguez', 'luis.diciembre@example.com', '5513131313', 'Calle 12', 'INE', 'DOC012', '2025-12-21');
+('Ana Enero', 'ana.enero@example.com', '5511111111', 'Calle 1', 'INE', 'DOC001', '2025-01-10'),
+('Bruno Febrero', 'bruno.febrero@example.com', '5522222222', 'Calle 2', 'Pasaporte', 'DOC002', '2025-02-12'),
+('Carla Marzo', 'carla.marzo@example.com', '5533333333', 'Calle 3', 'INE', 'DOC003', '2025-03-05'),
+('Daniel Abril', 'daniel.abril@example.com', '5544444444', 'Calle 4', 'INE', 'DOC004', '2025-04-08'),
+('Elena Mayo', 'elena.mayo@example.com', '5555555555', 'Calle 5', 'Pasaporte', 'DOC005', '2025-05-15'),
+('Fernando Junio', 'fernando.junio@example.com', '5566666666', 'Calle 6', 'INE', 'DOC006', '2025-06-20'),
+('Gabriela Julio', 'gabriela.julio@example.com', '5577777777', 'Calle 7', 'INE', 'DOC007', '2025-07-25'),
+('Hugo Agosto', 'hugo.agosto@example.com', '5588888888', 'Calle 8', 'Pasaporte', 'DOC008', '2025-08-18'),
+('Isabel Septiembre', 'isabel.septiembre@example.com', '5599999999', 'Calle 9', 'INE', 'DOC009', '2025-09-09'),
+('Jorge Octubre', 'jorge.octubre@example.com', '5510101010', 'Calle 10', 'INE', 'DOC010', '2025-10-11'),
+('Karen Noviembre', 'karen.noviembre@example.com', '5512121212', 'Calle 11', 'Pasaporte', 'DOC011', '2025-11-13'),
+('Luis Diciembre', 'luis.diciembre@example.com', '5513131313', 'Calle 12', 'INE', 'DOC012', '2025-12-21');
 
 SELECT * FROM Instructores
+SELECT * FROM Aud_Log_Instruc
+SELECT * FROM Aud_Elim_Instruc
+
+--RESETEA EL IDENTITY ID A PARTIR DEL NUMERO INDICADO DESPUES DE "RESEED"
+--MALA PRACTICA (NO UTILZAR!)
+DBCC CHECKIDENT (Instructores,Reseed,0);
+DBCC CHECKIDENT (Aud_Log_Instruc,Reseed,0);
+DBCC CHECKIDENT (Aud_Elim_Instruc,Reseed,0);
+
 -- Insercion de Instructores (3 instructores)
 INSERT INTO Instructores (nombre_completo, especialidad, usuario, contrasena, fecha_ingreso, estado)
 VALUES
@@ -777,16 +853,15 @@ VALUES
 ('Carlos Ruiz', 'Guitarra', 'cruiz', 'clave2', '2025-02-01', 'Activo'),
 ('Sofía Torres', 'Canto', 'storres', 'clave3', '2025-03-01', 'Activo');
 
-SELECT * FROM Cursos
 --Insercion de Cursos (3 cursos con fechas distintas)
+SELECT * FROM Cursos;
+SELECT * FROM Aud_Log_Cursos;
 INSERT INTO Cursos (nombre_curso, nivel, duracion_semanas, costo, estado_curso, capacidad, cupo_ocupado, fecha_inicio, fecha_fin)
 VALUES
 ('Curso Piano Básico', 'Básico', 12, 3000.00, 'Activo', 15, 0, '2025-01-15', '2025-04-15'),
 ('Curso Guitarra Intermedio', 'Intermedio', 10, 2500.00, 'Activo', 12, 0, '2025-05-01', '2025-07-10'),
 ('Curso Canto Avanzado', 'Avanzado', 8, 2000.00, 'Activo', 10, 0, '2025-09-01', '2025-10-30');
 
-
-SELECT * FROM Inscripciones
 -- Insercion de Inscripciones (12 inscripciones, una por cada mes)
 INSERT INTO Inscripciones (alumno_id, curso_id, instructor_id, fecha_inscripcion, metodo_pago, estado_inscripcion, total_pago)
 VALUES
@@ -804,10 +879,4 @@ VALUES
 (12, 3, 3, '2025-12-21', 'Efectivo', 'Activa', 2000.00);
 
 SELECT * FROM Inscripciones
-
-
-SELECT * FROM Inscripciones
-
-SELECT * FROM Aud_Log_Alumnos
-SELECT * FROM Aud_Log_Cursos
 SELECT * FROM Aud_Log_Inscrip
