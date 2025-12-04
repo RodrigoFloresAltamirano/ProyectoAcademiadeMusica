@@ -1,12 +1,19 @@
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import reverse
+from django.contrib.auth.decorators import login_required, user_passes_test
 
 from .models import Alumnos, Inscripciones
 from .forms import AlumnoForm
 
 # Create your views here.
 
+def es_administrador(user):
+    # Devuelve True si es superusuario O si pertenece al grupo "Administradores"
+    return user.is_superuser or user.groups.filter(name='Administradores').exists()
+
+@login_required(login_url='login') # Obliga a iniciar sesión
+@user_passes_test(es_administrador, login_url='login') # Obliga a tener el rol
 def index(request):
     return render(request, 'alumnos/index.html',{
         'alumnos': Alumnos.objects.all()
@@ -16,6 +23,8 @@ def view_alumno(request, id):
     alumno = Alumnos.objects.get(pk=id)
     return HttpResponseRedirect(reverse('index'))
 
+@login_required
+@user_passes_test(es_administrador)
 def add(request):
     if request.method == 'POST':
         form = AlumnoForm(request.POST)
@@ -34,6 +43,8 @@ def add(request):
     return render(request, 'alumnos/agregar.html', {
         'form': form
     })
+    pass
+
 
 def editar(request, id):
     if request.method == 'POST':
@@ -52,6 +63,8 @@ def editar(request, id):
         'form': form
     })
 
+@login_required
+@user_passes_test(es_administrador)
 def eliminar(request, id):
     # request.POST para asegurar que solo se ejecuta con el botón del modal
     if request.method == 'POST':
@@ -77,3 +90,4 @@ def eliminar(request, id):
             
     # Si alguien intenta acceder a eliminar por GET, solo redirige
     return redirect('index')
+    pass

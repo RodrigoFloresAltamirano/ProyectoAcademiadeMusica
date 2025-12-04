@@ -130,3 +130,10 @@ except ImportError:
     # Aquí puedes definir valores de base de datos 'dummy' para que la aplicación no falle si falta el archivo.
     print("ADVERTENCIA: settings_local.py no encontrado. Usando configuración por defecto/insegura.")
     pass # La configuración por defecto se usará si no se encuentra settings_local
+
+# Redirige aquí después de iniciar sesión correctamente
+LOGIN_REDIRECT_URL = '/'  
+# "Cuando el usuario ingresalos datos correctamente, se manda a la pagina de inicio la raiz"
+
+# Redirige aquí después de cerrar sesión (para asegurar el logout también)
+LOGOUT_REDIRECT_URL = 'login'
