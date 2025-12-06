@@ -1,0 +1,48 @@
+{% extends 'estudiantes/base_estudiantes.html' %}
+
+{% block content %}
+<h2 class="mb-4"><i class="fa-solid fa-book-open"></i> Cursos Disponibles</h2>
+
+<div class="row">
+    {% for curso in cursos %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm border-primary">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">{{ curso.nombre_curso }}</h5>
+            </div>
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">{{ curso.nivel }}</h6>
+                <p class="card-text">
+                    <strong>Duración:</strong> {{ curso.duracion_semanas }} semanas<br>
+                    <strong>Fechas:</strong> {{ curso.fecha_inicio }} - {{ curso.fecha_fin }}<br>
+                    <strong>Costo:</strong> ${{ curso.costo }}<br>
+                    
+                    <div class="mt-2">
+                        <small>Cupos ocupados: {{ curso.cupo_ocupado }} / {{ curso.capacidad }}</small>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-info" role="progressbar" 
+                                 style="width: calc(({{ curso.cupo_ocupado }} / {{ curso.capacidad }}) * 100%);"
+                                aria-valuenow="{{ curso.cupo_ocupado }}" aria-valuemin="0" aria-valuemax="{{ curso.capacidad }}">
+                            </div>
+                        </div>
+                    </div>
+                </p>
+            </div>
+            <div class="card-footer bg-transparent border-top-0">
+                <div class="d-grid">
+                    <a href="{% url 'estudiantes_inscripcion_con_id' curso.curso_id %}" class="btn btn-outline-primary">
+                        <i class="fa-solid fa-pen-nib"></i> Inscribirme
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            No hay cursos activos disponibles en este momento.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -68,22 +68,22 @@ def cursos_disponibles(request):
     })
 
 @login_required
-def inscribirse(request):
+def inscribirse(request, curso_id=None): # <--- Agregamos curso_id=None como parámetro
     if request.method == 'POST':
         form = InscripcionForm(request.POST)
         if form.is_valid():
             try:
-                # Obtener datos del formulario y del usuario
+                # 1. Obtener datos
                 alumno = Alumnos.objects.get(email=request.user.email)
                 curso_obj = form.cleaned_data['curso']
                 instructor_obj = form.cleaned_data['instructor']
                 metodo_pago = form.cleaned_data['metodo_pago']
                 
-                # Cantidad 1 y costo del curso es el total
+                # 2. Preparar parámetros (Igual que antes)
                 fecha_hoy = datetime.date.today()
-                costo = curso_obj.costo # Costo de la tabla cursos
+                costo = curso_obj.costo 
                 
-                # Se ejecuta el procedimiento
+                # 3. EJECUTAR EL PROCEDIMIENTO ALMACENADO
                 with connection.cursor() as cursor:
                     sql = """
                         EXEC registrar_inscripcion 
@@ -92,32 +92,26 @@ def inscribirse(request):
                         @total_pago=%s, @concepto=%s, @cantidad=%s, 
                         @precio_unitario=%s, @subtotal=%s
                     """
-                    # Parametros
                     params = [
-                        alumno.alumno_id,
-                        curso_obj.curso_id,
-                        instructor_obj.instructor_id,
-                        fecha_hoy,              # fecha_inscripcion
-                        metodo_pago,
-                        'Activa',               # estado_inscripcion
-                        costo,                  # total_pago
-                        f'Inscripción: {curso_obj.nombre_curso}', # concepto
-                        1,
-                        costo,                  # precio_unitario
-                        costo                   # subtotal
+                        alumno.alumno_id, curso_obj.curso_id, instructor_obj.instructor_id,
+                        fecha_hoy, metodo_pago, 'Activa', costo,
+                        f'Inscripción: {curso_obj.nombre_curso}', 1, costo, costo
                     ]
-                    
                     cursor.execute(sql, params)
                 
-                # Mensaje de que se realizo correctamente
                 messages.success(request, f'¡Inscripción exitosa al curso {curso_obj.nombre_curso}!')
                 return redirect('estudiantes_historial')
 
             except Exception as e:
-                # Si no hay cupos se captura
                 messages.error(request, f"Error al inscribir: {e}")
     else:
-        form = InscripcionForm()
+        # GET: Aquí está el truco para pre-seleccionar el curso
+        if curso_id:
+            # Si venimos desde la tarjeta del curso, iniciamos el formulario con ese curso seleccionado
+            form = InscripcionForm(initial={'curso': curso_id})
+        else:
+            # Si entramos desde el menú, el formulario aparece vacío
+            form = InscripcionForm()
 
     return render(request, 'estudiantes/inscripcion.html', {
         'form': form
