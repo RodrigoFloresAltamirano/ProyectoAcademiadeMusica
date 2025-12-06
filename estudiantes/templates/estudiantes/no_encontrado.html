@@ -1,0 +1,18 @@
+{% extends 'estudiantes/base_estudiantes.html' %}
+
+{% block content %}
+<div class="alert alert-warning text-center mt-5 shadow">
+    <h2><i class="fa-solid fa-triangle-exclamation"></i> Alumno No Vinculado</h2>
+    <p class="lead">
+        No pudimos encontrar tu información académica.
+    </p>
+    <hr>
+    <p>
+        Esto sucede porque el <strong>correo electrónico</strong> de tu usuario de sistema 
+        no coincide con el correo registrado en tu ficha de Alumno.
+    </p>
+    <div class="d-flex justify-content-center gap-2 mt-4">
+        <a href="{% url 'logout' %}" class="btn btn-danger">Cerrar Sesión</a>
+    </div>
+</div>
+{% endblock %}

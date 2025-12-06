@@ -26,6 +26,8 @@ urlpatterns = [
 # Rutas de instructores
     path('instructores/', include('instructores.urls')),
 
+    path('estudiantes/', include('estudiantes.urls')),
+
 # Rutas para autenticacion
     # ruta para el login
     path('accounts/login/', auth_views.LoginView.as_view(template_name='alumnos/login.html'), name='login'),

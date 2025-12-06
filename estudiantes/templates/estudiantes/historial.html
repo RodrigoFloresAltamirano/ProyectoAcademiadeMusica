@@ -1,0 +1,35 @@
+{% extends 'estudiantes/base_estudiantes.html' %}
+
+{% block content %}
+<h2><i class="fa-solid fa-clock-rotate-left"></i> Mi Historial de Cursos</h2>
+<div class="table-responsive mt-3">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Curso</th>
+                <th>Nivel</th>
+                <th>Fecha Inscripción</th>
+                <th>Estado</th>
+                <th>Pago Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in historial %}
+            <tr>
+                <td>{{ item.nombre_curso }}</td>
+                <td>{{ item.nivel }}</td>
+                <td>{{ item.fecha_inscripcion }}</td>
+                <td>
+                    <span class="badge bg-{% if item.estado_inscripcion == 'Activa' %}success{% else %}secondary{% endif %}">
+                        {{ item.estado_inscripcion }}
+                    </span>
+                </td>
+                <td>${{ item.total_pago }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5">No tienes historial registrado.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

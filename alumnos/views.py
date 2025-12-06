@@ -30,7 +30,6 @@ def add(request):
         form = AlumnoForm(request.POST)
         if form.is_valid():
             
-            # **CÓDIGO CORREGIDO:** Usar form.save()
             form.save() 
             
             # Redirigir a la vista de índice para ver el nuevo alumno
@@ -72,38 +71,42 @@ def eliminar(request, id):
             # El ID es alumno_id
             alumno_id = id 
             
-            # 1. Obtener el alumno a eliminar
+            # Obtener el alumno a eliminar
             alumno = Alumnos.objects.get(pk=alumno_id)
             
-            # 2. Eliminar registros dependientes
-            #    Esto borra todas las filas en Inscripciones asociadas a este alumno.
+            # Eliminar registros dependientes
+            # Borra filas en Inscripciones asociadas a este alumno.
             Inscripciones.objects.filter(alumno_id=alumno_id).delete()
 
-            # 3. Eliminar el alumno (el padre)
+            # Eliminar el alumno
             alumno.delete() 
 
             return redirect('index')
         
         except Alumnos.DoesNotExist:
-            # Si el alumno ya fue eliminado, simplemente redirige.
+            # Si el alumno ya fue eliminado se redirige
             return redirect('index')
             
-    # Si alguien intenta acceder a eliminar por GET, solo redirige
+    # Solo redirige
     return redirect('index')
     pass
 
 @login_required
 def home_redirect(request):
-    # CASO 1: Si es Admin o Superusuario, lo mandamos a la vista 'index' de ESTA app (alumnos)
-    if request.user.is_superuser or request.user.groups.filter(name='Administradores').exists():
+    usuario = request.user
+    
+    # Administradores
+    if usuario.is_superuser or usuario.groups.filter(name='Administradores').exists():
         return redirect('index') 
     
-    # CASO 2: Si es Instructor, lo mandamos a la vista de la OTRA app (instructores)
-    # 'panel_instructores' es el nombre que le pondremos a la URL en el siguiente paso
-    elif request.user.groups.filter(name='Instructores').exists():
+    # Instructores
+    elif usuario.groups.filter(name='Instructores').exists():
         return redirect('panel_instructores') 
     
-    # CASO 3: Si no tiene rol, mostramos error o lo sacamos
+    # Alumnos
+    elif usuario.groups.filter(name='Alumnos').exists():
+        return redirect('estudiantes_home') 
+    
+    # Sin Permiso (Si no tiene grupo, rol)
     else:
-        # html simple llamado 'sin_permiso.html' o redirigir al login
         return render(request, 'alumnos/sin_permiso.html')

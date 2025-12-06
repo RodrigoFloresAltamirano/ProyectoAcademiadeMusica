@@ -1,0 +1,40 @@
+{% extends 'estudiantes/base_estudiantes.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4><i class="fa-solid fa-pen-nib"></i> Nueva Inscripción</h4>
+            </div>
+            <div class="card-body">
+                
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Alumno:</label>
+                        <input type="text" class="form-control" value="{{ user.username }}" disabled>
+                        <small class="text-muted">La inscripción se registrará a tu nombre.</small>
+                    </div>
+
+                    {{ form.as_p }}
+
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fa-regular fa-credit-card"></i> Confirmar Inscripción y Pagar
+                        </button>
+                        <a href="{% url 'estudiantes_home' %}" class="btn btn-secondary">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

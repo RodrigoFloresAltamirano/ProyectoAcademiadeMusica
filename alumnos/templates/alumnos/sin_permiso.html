@@ -1,0 +1,15 @@
+{% extends "alumnos/base.html" %}
+
+{% block body %}
+<div class="alert alert-danger text-center mt-5" role="alert">
+    <h4 class="alert-heading"><i class="fa-solid fa-ban"></i> Acceso Denegado</h4>
+    <p>Tu usuario no tiene un rol asignado (Alumno, Instructor o Admin).</p>
+    <hr>
+    <p class="mb-0">Por favor contacta al administrador o cierra sesión.</p>
+    <br>
+    <form action="{% url 'logout' %}" method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Cerrar Sesión</button>
+    </form>
+</div>
+{% endblock %}
