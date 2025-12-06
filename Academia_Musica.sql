@@ -715,51 +715,56 @@ END;
 --SE USARON CAMPOS IDENTITY
 
 
--- 6. Técnicas Avanzadas (10%) (FALLA)
---------------------------------------------------------------------------------------------------------------------
---FALLA
---------------------------------------------------------------------------------------------------------------------
+-- 6. Técnicas Avanzadas (10%)
 --•	PIVOT: Reporte de número de inscripciones por mes y por curso.
 CREATE PROCEDURE InscripcionesPorMes2025
 AS
 BEGIN
-	SELECT *
-	FROM
-	(
-		SELECT c.nombre_curso,
-			   DATENAME(MONTH, i.fecha_inscripcion) + ' ' + CAST(YEAR(i.fecha_inscripcion) AS VARCHAR(4)) AS Mes,
-			   1 AS Cantidad
-		FROM Inscripciones i
-		JOIN Cursos c ON i.curso_id = c.curso_id
-		WHERE i.fecha_inscripcion >= DATEADD(MONTH, -11, GETDATE())
-	) AS Fuente
-	PIVOT
-	(
-		SUM(Cantidad)
-		FOR Mes IN (
-			[Enero 2025], [Febrero 2025], [Marzo 2025], [Abril 2025], [Mayo 2025],
-			[Junio 2025],[Julio 2025], [Agosto 2025], [Septiembre 2025], [Octubre 2025], 
-			[Noviembre 2025], [Diciembre 2025]
-		)
-	) AS Pvt
+	SELECT CURSO,[1] AS Enero,[2] AS Febrero,[3] AS Marzo,[4] AS Abril,[5] AS Mayo,[6] AS Junio,
+		[7] AS Julio,[8] AS Agosto,[9] AS Septiembre,[10] AS Octubre,[11] AS Noviembre,[12] AS Diciembre
+	FROM (
+		SELECT 
+			C.nombre_curso AS CURSO,
+			MONTH(I.fecha_inscripcion) AS Mes,
+			COUNT(I.inscripcion_id) AS Cantidad_Inscripciones
+			FROM Inscripciones I
+			INNER JOIN Cursos C ON I.curso_id = C.curso_id
+			WHERE YEAR(I.fecha_inscripcion) = 2025
+			GROUP BY C.nombre_curso, MONTH(I.fecha_inscripcion)
+		) AS Fuente
+	PIVOT (
+		SUM(Cantidad_Inscripciones)
+		FOR Mes IN ([1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12])
+	) AS PivotInscripciones
+	ORDER BY CURSO;
 END;
-SELECT * FROM Inscripciones
+
 EXEC InscripcionesPorMes2025
+
+
 --•	CASE: Clasificación de alumnos según nivel o frecuencia de participación.
-CREATE PROCEDURE Frecuencia_inscripciones
+
+CREATE PROCEDURE clasificacion_nivel_alumnos
 AS
 BEGIN
-SELECT a.alumno_id, a.nombre_completo,
-       COUNT(i.inscripcion_id) AS total_inscripciones,
-       CASE
-           WHEN COUNT(i.inscripcion_id) >= 6 THEN 'Frecuente'
-           WHEN COUNT(i.inscripcion_id) BETWEEN 3 AND 5 THEN 'Medio'
-           ELSE 'Ocasional'
-       END AS Categoria_Alumno
-FROM Alumnos a
-LEFT JOIN Inscripciones i ON a.alumno_id = i.alumno_id
-GROUP BY a.alumno_id, a.nombre_completo;
+	SELECT 
+		a.nombre_completo,
+		c.nombre_curso,
+		c.nivel,
+		CASE
+			WHEN c.nivel = 'Básico' THEN 'Nivel Básico - Principiante'
+			WHEN c.nivel = 'Intermedio' THEN 'Nivel Intermedio - En desarrollo'
+			WHEN c.nivel = 'Avanzado' THEN 'Nivel Avanzado - Experimentado'
+			ELSE 'Sin asignar'
+		END AS clasificacion_nivel
+	FROM Alumnos a
+	INNER JOIN Inscripciones i ON a.alumno_id = i.alumno_id
+	INNER JOIN Cursos c ON i.curso_id = c.curso_id
+	WHERE i.estado_inscripcion = 'Activa' 
+	ORDER BY c.nivel, a.nombre_completo;
 END;
+
+EXEC clasificacion_nivel_alumnos
 
 --•	Subconsultas: Para identificar cursos activos o inscripciones vigentes.
 CREATE PROCEDURE Inscripciones_y_cursos_vigentes
@@ -880,3 +885,4 @@ VALUES
 
 SELECT * FROM Inscripciones
 SELECT * FROM Aud_Log_Inscrip
+
