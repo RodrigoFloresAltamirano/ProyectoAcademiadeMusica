@@ -438,15 +438,16 @@ BEGIN
 	SET estado_curso = 'Activo'
 	FROM Cursos
 	INNER JOIN inserted ON Cursos.curso_id = inserted.curso_id
-	WHERE GETDATE() BETWEEN Cursos.fecha_inicio AND Cursos.fecha_fin
-	AND Cursos.estado_curso = 'Activo';
+	WHERE Cursos.estado_curso <> 'Activo'
+	AND GETDATE() BETWEEN Cursos.fecha_inicio AND Cursos.fecha_fin;
 
 	--ESTADO CANCELADO
 	UPDATE Cursos
 	SET estado_curso = 'Cancelado'
 	FROM Cursos
 	INNER JOIN inserted ON  Cursos.curso_id = inserted.curso_id
-	WHERE inserted.estado_curso = 'Cancelado';
+	WHERE Cursos.estado_curso = 'Cancelado'
+	AND Cursos.estado_curso <> 'Cancelado';
 
 	--ESTADO FINALIZADO
 	UPDATE Cursos
@@ -454,7 +455,7 @@ BEGIN
 	FROM Cursos
 	INNER JOIN  inserted ON Cursos.curso_id = inserted.curso_id
 	WHERE GETDATE() > Cursos.fecha_fin
-	AND Cursos.estado_curso = 'Finalizado'
+	AND Cursos.estado_curso <> 'Finalizado'
 	
 	--REGISTRO EN TABLA AUDITORIA
 	INSERT INTO Aud_Act_Cursos(tabla_afectada, accion, usuario, descripcion)
@@ -472,30 +473,6 @@ BEGIN
     INNER JOIN deleted d ON i.curso_id = d.curso_id;
 END;
 
-
-	--•	Generación de alertas por baja demanda de cursos o exceso de cupos vacíos.
-CREATE TRIGGER trg_alerta_baja_demanda
-ON Cursos
-AFTER UPDATE
-AS
-BEGIN
-    IF UPDATE(cupo_ocupado)
-    BEGIN
-        DECLARE @curso_id INT, @cupo_ocupado INT, @capacidad INT;
-        
-        SELECT @curso_id = curso_id, 
-		@cupo_ocupado = cupo_ocupado, 
-		@capacidad = capacidad
-
-        FROM inserted;
-                
-        IF @cupo_ocupado < 05.0
-        BEGIN
-            PRINT 'ALERTA: Curso ID ' + CAST(@curso_id AS VARCHAR) + 
-			' tiene solo ' + CAST(@cupo_ocupado AS VARCHAR) + 'cupos ocupados';
-        END
-    END
-END;
 
 --2. TRANSACCIONES
 	--Proceso completo de inscripción (Inscripciones + Detalle_Inscripciones) dentro de una transacción atómica.
@@ -885,4 +862,5 @@ VALUES
 
 SELECT * FROM Inscripciones
 SELECT * FROM Aud_Log_Inscrip
+
 
