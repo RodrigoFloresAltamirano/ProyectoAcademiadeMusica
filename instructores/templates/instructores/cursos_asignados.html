@@ -1,0 +1,63 @@
+{% extends "instructores/base_instructores.html" %}
+
+{% block body %}
+<h3 class="m-4"><i class="fa-solid fa-book"></i> Mis Cursos</h3>
+
+<div class="row">
+    <div class="col-12">
+
+        {% if cursos %}
+        <div class="card border-light ms-4 me-4 mb-4">
+            <div class="card-header">
+                <i class="fa-solid fa-list"></i> Lista de Cursos
+            </div>
+
+            <div class="card-body">
+                <div class="table-responsive">
+
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Curso</th>
+                                <th>Descripción</th>
+                                <th>Estado</th>
+                                <th>Inicio</th>
+                                <th>Fin</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for curso in cursos %}
+                            <tr>
+                                <td>{{ curso.curso_id }}</td>
+                                <td>{{ curso.nombre_curso }}</td>
+                                <td>{{ curso.descripcion }}</td>
+                                <td>{{ curso.estado_curso }}</td>
+                                <td>{{ curso.fecha_inicio }}</td>
+                                <td>{{ curso.fecha_fin }}</td>
+                                <td>
+                                    <a href="{% url 'actualizar_estado' curso.curso_id %}"
+                                       class="btn btn-warning">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+
+                    </table>
+
+                </div>
+            </div>
+
+        </div>
+        {% else %}
+        <h5 class="alert alert-primary ms-4 me-4">Sin cursos asignados.</h5>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

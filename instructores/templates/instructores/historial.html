@@ -1,0 +1,57 @@
+{% extends "instructores/base_instructores.html" %}
+
+{% block body %}
+<h3 class="m-4"><i class="fa-solid fa-clock-rotate-left"></i> Historial de Inscripciones</h3>
+
+<div class="row">
+    <div class="col-12">
+
+        {% if historial %}
+        <div class="card border-light ms-4 me-4 mb-4">
+
+            <div class="card-header">
+                <i class="fa-solid fa-list"></i> Inscripciones a mis cursos
+            </div>
+
+            <div class="card-body">
+                <div class="table-responsive">
+
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Alumno</th>
+                                <th>Curso</th>
+                                <th>Fecha</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for ins in historial %}
+                            <tr>
+                                <td>{{ ins.inscripcion_id }}</td>
+                                <td>{{ ins.alumno.nombre_completo }}</td>
+                                <td>{{ ins.curso.nombre_curso }}</td>
+                                <td>{{ ins.fecha_inscripcion }}</td>
+                                <td>{{ ins.curso.estado_curso }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+
+                    </table>
+
+                </div>
+            </div>
+
+        </div>
+
+        {% else %}
+        <h5 class="alert alert-primary ms-4 me-4">Sin historial disponible.</h5>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}
+
