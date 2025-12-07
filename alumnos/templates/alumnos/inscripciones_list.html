@@ -1,0 +1,187 @@
+{% extends "alumnos/base.html" %}
+
+{% block body %}
+<h3 class="m-4">Gestionar Inscripciones</h3>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card border-warning ms-4 me-4 mb-4">
+
+            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                
+                <span class="fs-5">
+                    <i class="fa-solid fa-file-signature"></i> Registro de Inscripciones
+                </span>
+                
+                <div>
+                    <a href="{% url 'nueva_inscripcion' %}" class="btn btn-dark btn-sm shadow-sm">
+                        <i class="fa-solid fa-plus"></i> Nueva Inscripción
+                    </a>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">Alumno</th>
+                                <th scope="col">Curso</th>
+                                <th scope="col">Instructor</th>
+                                <th scope="col">Fecha</th>
+                                <th scope="col">Total</th>
+                                <th scope="col">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for inscripcion in inscripciones %}
+                            <tr>
+                                <td>{{ inscripcion.inscripcion_id }}</td>
+                                <td class="fw-bold">{{ inscripcion.alumno }}</td>
+                                <td>{{ inscripcion.nombre_curso }}</td>
+                                <td>{{ inscripcion.instructor }}</td>
+                                <td>{{ inscripcion.fecha_inscripcion|date:"d/m/Y" }}</td>
+                                <td>${{ inscripcion.total_pago }}</td>
+                                <td>
+                                    {% if inscripcion.total_pago < inscripcion.costo_original %} <button type="button"
+                                        class="btn btn-warning btn-sm me-1 text-dark" data-bs-toggle="popover"
+                                        title="Descuento Aplicado"
+                                        data-bs-content="Este alumno obtuvo un precio especial por ser recurrente en la academia.">
+                                        <i class="fa-solid fa-star"></i> Recurrente
+                                        </button>
+
+                                        {% endif %}
+                                        <button type="button" class="btn-success me-1" data-bs-toggle="modal"
+                                            data-bs-target="#infoInsc{{inscripcion.inscripcion_id}}">
+                                            <i class="fa-solid fa-circle-info"></i>
+                                        </button>
+
+                                        <div class="modal fade" id="infoInsc{{inscripcion.inscripcion_id}}"
+                                            tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header bg-success text-white">
+                                                        <h5 class="modal-title">Detalle Inscripción #{{
+                                                            inscripcion.inscripcion_id }}</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                            aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <ul class="list-unstyled">
+                                                            <li><strong>Alumno:</strong> {{ inscripcion.alumno }}</li>
+                                                            <li><strong>Curso:</strong> {{ inscripcion.nombre_curso }}
+                                                            </li>
+                                                            <li><strong>Instructor:</strong> {{ inscripcion.instructor
+                                                                }}
+                                                            </li>
+                                                            <li><strong>Fecha:</strong> {{ inscripcion.fecha_inscripcion
+                                                                }}
+                                                            </li>
+                                                            <li><strong>Pago Total:</strong> ${{ inscripcion.total_pago
+                                                                }}
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary"
+                                                            data-bs-dismiss="modal">Cerrar</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <small style="color: red;">
+    (Pago: {{ inscripcion.total_pago }} / Costo: {{ inscripcion.costo_original }})
+</small>
+
+                                        <div class="modal fade" id="descuentoModal{{inscripcion.inscripcion_id}}"
+                                            tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header bg-info text-white">
+                                                        <h5 class="modal-title">Aplicar Descuento</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                            aria-label="Close"></button>
+                                                    </div>
+
+                                                    <form
+                                                        action="{% url 'aplicar_descuento' inscripcion.inscripcion_id %}"
+                                                        method="POST">
+                                                        {% csrf_token %}
+                                                        <div class="modal-body">
+                                                            <p>Alumno: <strong>{{ inscripcion.alumno }}</strong></p>
+                                                            <p>Monto Actual: <strong>${{ inscripcion.total_pago
+                                                                    }}</strong>
+                                                            </p>
+
+                                                            <div class="mb-3">
+                                                                <label for="porcentaje" class="form-label">Porcentaje de
+                                                                    Descuento (%)</label>
+                                                                <input type="number" class="form-control"
+                                                                    name="porcentaje" placeholder="Ej: 10, 20, 50"
+                                                                    min="1" max="100" step="0.01" required>
+                                                                <div class="form-text">
+                                                                    Ingrese el valor del descuento (ej. escriba 15 para
+                                                                    un
+                                                                    15% de descuento).
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary"
+                                                                data-bs-dismiss="modal">Cancelar</button>
+                                                            <button type="submit"
+                                                                class="btn btn-info text-white">Aplicar
+                                                                Descuento</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <button type="button" class="btn btn-danger" data-bs-toggle="modal"
+                                            data-bs-target="#cancelarInsc{{inscripcion.inscripcion_id}}">
+                                            <i class="fa-solid fa-trash-can"></i>
+                                        </button>
+
+                                        <div class="modal fade" id="cancelarInsc{{inscripcion.inscripcion_id}}"
+                                            tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header bg-danger text-white">
+                                                        <h5 class="modal-title">Cancelar Inscripción</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                            aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p>¿Estás seguro de que deseas cancelar la inscripción de
+                                                            <strong>{{ inscripcion.alumno }}</strong> en el curso
+                                                            <strong>{{ inscripcion.nombre_curso }}</strong>?</p>
+                                                        <p class="small text-muted">Esta acción liberará un cupo en el
+                                                            curso.</p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary"
+                                                            data-bs-dismiss="modal">Cerrar</button>
+                                                        <button type="button" class="btn btn-danger">Confirmar
+                                                            Cancelación</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center p-4">No hay inscripciones registradas.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

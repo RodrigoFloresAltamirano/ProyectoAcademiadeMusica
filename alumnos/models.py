@@ -27,7 +27,6 @@ class Cursos(models.Model):
     # Solo es necesario definir la PK y la FK.
     curso_id = models.AutoField(primary_key=True)
     nombre_curso = models.CharField(max_length=100, blank=True, null=True)
-    # Agregamos los campos que faltaban para que funcionen los filtros y pagos:
     nivel = models.CharField(max_length=50, blank=True, null=True)
     duracion_semanas = models.IntegerField(blank=True, null=True)
     costo = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
@@ -46,12 +45,11 @@ class Cursos(models.Model):
         
 class Instructores(models.Model):
     instructor_id = models.AutoField(primary_key=True)
-    # Agregamos los campos faltantes:
     nombre_completo = models.CharField(max_length=100, blank=True, null=True)
     especialidad = models.CharField(max_length=50, blank=True, null=True)
     estado = models.CharField(max_length=20, blank=True, null=True)
-    # Otros campos si los necesitas (usuario, contrasena, etc.)
-    
+    fecha_ingreso = models.DateField(blank=True, null=True)
+
     class Meta:
         managed = False
         db_table = 'Instructores'

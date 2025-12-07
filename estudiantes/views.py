@@ -68,22 +68,22 @@ def cursos_disponibles(request):
     })
 
 @login_required
-def inscribirse(request, curso_id=None): # <--- Agregamos curso_id=None como parámetro
+def inscribirse(request, curso_id=None): # curso_id=None como parámetro
     if request.method == 'POST':
         form = InscripcionForm(request.POST)
         if form.is_valid():
             try:
-                # 1. Obtener datos
+                # Obtener datos
                 alumno = Alumnos.objects.get(email=request.user.email)
                 curso_obj = form.cleaned_data['curso']
                 instructor_obj = form.cleaned_data['instructor']
                 metodo_pago = form.cleaned_data['metodo_pago']
                 
-                # 2. Preparar parámetros (Igual que antes)
+                # Parámetros
                 fecha_hoy = datetime.date.today()
                 costo = curso_obj.costo 
                 
-                # 3. EJECUTAR EL PROCEDIMIENTO ALMACENADO
+                # Ejecutar el procedimiento
                 with connection.cursor() as cursor:
                     sql = """
                         EXEC registrar_inscripcion 
@@ -105,12 +105,9 @@ def inscribirse(request, curso_id=None): # <--- Agregamos curso_id=None como par
             except Exception as e:
                 messages.error(request, f"Error al inscribir: {e}")
     else:
-        # GET: Aquí está el truco para pre-seleccionar el curso
         if curso_id:
-            # Si venimos desde la tarjeta del curso, iniciamos el formulario con ese curso seleccionado
             form = InscripcionForm(initial={'curso': curso_id})
         else:
-            # Si entramos desde el menú, el formulario aparece vacío
             form = InscripcionForm()
 
     return render(request, 'estudiantes/inscripcion.html', {

@@ -1,133 +1,227 @@
 {% extends "alumnos/base.html" %}
 
 {% block body %}
-<h3 class="m-4">Todos los Alumnos</h3>
+<h3 class="m-4">Gestionar Academia</h3>
+
 <div class="row">
     <div class="col-12">
+
         {% if alumnos %}
-        <div class="card border-light ms-4 me-4 mb-4">
-            <div class="card-header">
-                <i class="fa-solid fa-list fa-lg"></i> Registro de Alumnos
+        <div class="card border-light ms-4 me-4 mb-5">
+            
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                
+                <span class="fs-5"> <i class="fa-solid fa-graduation-cap"></i> Gestión de Alumnos
+                </span>
+                
+                <div>
+                    <a href="{% url 'agregar' %}" class="btn btn-light btn-sm text-primary fw-bold shadow-sm">
+                        <i class="fa-solid fa-plus"></i> Agregar Alumno
+                    </a>
+                </div>
+
             </div>
             <div class="card-body">
-                <p class="card-text">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th scope="col">alumno id</th>
-                                <th scope="col">nombre completo</th>
-                                <th scope="col">email</th>
-                                <th scope="col">telefono</th>
-                                <th scope="col">direccion</th>
-                                <th scope="col">tipo documento</th>
-                                <th scope="col">numero documento</th>
-                                <th scope="col">fecha registro</th>
-                                <th scope="col">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for alumno in alumnos %}
-                            <tr>
-                                <td>{{ alumno.alumno_id }}</td>
-                                <td>{{ alumno.nombre_completo }}</td>
-                                <td>{{ alumno.email }}</td>
-                                <td>{{ alumno.telefono }}</td>
-                                <td>{{ alumno.direccion }}</td>
-                                <td>{{ alumno.tipo_documento }}</td>
-                                <td>{{ alumno.numero_documento }}</td>
-                                <td>{{ alumno.fecha_registro }}</td>
-                                <td>
-                                    <button type="button" class="btn-success me-1"
-                                        href="{% url 'view_alumno' alumno.alumno_id %}" data-bs-toggle="modal"
-                                        data-bs-target="#myModal{{alumno.alumno_id}}">
-                                        <i class="fa-solid fa-circle-info fa-lg"></i>
-                                    </button>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>alumno id</th>
+                            <th>nombre completo</th>
+                            <th>email</th>
+                            <th>telefono</th>
+                            <th>tipo documento</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for alumno in alumnos %}
+                        <tr>
+                            <td>{{ alumno.alumno_id }}</td>
+                            <td>{{ alumno.nombre_completo }}</td>
+                            <td>{{ alumno.email }}</td>
+                            <td>{{ alumno.telefono }}</td>
+                            <td>{{ alumno.tipo_documento }}</td>
+                            <td>
+                                <button type="button" class="btn-success me-1" data-bs-toggle="modal"
+                                    data-bs-target="#myModal{{alumno.alumno_id}}">
+                                    <i class="fa-solid fa-circle-info fa-lg"></i>
+                                </button>
 
-                                    <!--Modal - view Alumno-->
-                                    <div class="modal" id="myModal{{alumno.alumno_id}}" tabindex="-1"
-                                        aria-labelledby="myModalLabel1" aria-hidden="true">
-                                        <div class="modal-dialog" role="document">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">
-                                                        Alumno: {{ alumno.nombre_completo }}
-                                                    </h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                        aria-label="Close">
-                                                        <span aria-hidden="true"></span>
-                                                    </button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <ul class="list-unstyled">
-                                                        <li>No Alumno: <strong>{{ alumno.alumno_id }}</strong>
-                                                        </li>
-                                                        <li>Nombre Completo: <strong>{{ alumno.nombre_completo }}</strong></li>
-                                                        <li>Correo: <strong>{{ alumno.email }}</strong></li>
-                                                        <li>Telefono: <strong>{{ alumno.telefono }}</strong></li>
-                                                        <li>Direccion: <strong>{{ alumno.direccion }}</strong></li>
-                                                        <li>Tipo Documento: <strong>{{ alumno.tipo_documento }}</strong></li>
-                                                        <li>No Documento: <strong>{{ alumno.numero_documento }}</strong></li>
-                                                        <li>Fecha de Registro: <strong>{{ alumno.fecha_registro }}</strong></li>
-                                                    </ul>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-primary"
-                                                        data-bs-dismiss="modal">Cerrar</button>
-                                                </div>
+                                <div class="modal fade" id="myModal{{alumno.alumno_id}}" tabindex="-1"
+                                    aria-hidden="true">
+                                    <div class="modal-dialog" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">{{ alumno.nombre_completo }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <ul class="list-unstyled">
+                                                    <li>ID: <strong>{{ alumno.alumno_id }}</strong></li>
+                                                    <li>Email: <strong>{{ alumno.email }}</strong></li>
+                                                    <li>Teléfono: <strong>{{ alumno.telefono }}</strong></li>
+                                                    <li>Dirección: <strong>{{ alumno.direccion }}</strong></li>
+                                                    <li>Documento: <strong>{{ alumno.tipo_documento }} - {{ alumno.numero_documento }}</strong></li>
+                                                    <li>Registro: <strong>{{ alumno.fecha_registro }}</strong></li>
+                                                </ul>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-primary"
+                                                    data-bs-dismiss="modal">Cerrar</button>
                                             </div>
                                         </div>
                                     </div>
+                                </div>
 
-                                    <a class="btn btn-warning me-1" href="{% url 'editar' alumno.alumno_id %}">
-                                        <i class="fa-solid fa-pen-to-square fa-lg"></i>
-                                    </a>
+                                <a class="btn btn-warning me-1" href="{% url 'editar' alumno.alumno_id %}">
+                                    <i class="fa-solid fa-pen-to-square fa-lg"></i>
+                                </a>
 
-                                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#eliminar{{alumno.alumno_id}}">
-                                        <i class="fa-solid fa-trash-can fa-lg"></i>
-                                    </button>
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal"
+                                    data-bs-target="#eliminar{{alumno.alumno_id}}">
+                                    <i class="fa-solid fa-trash-can fa-lg"></i>
+                                </button>
 
-                                    <!--Modal - eliminar(delete) Alumno-->
-                                    <div class="modal" id="eliminar{{alumno.alumno_id}}" tabindex="-1"
-                                        aria-labelledby="myModalLabel2" aria-hidden="true">
-                                        <div class="modal-dialog" role="document">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title">
-                                                        Alumno: {{ alumno.nombre_completo }}
-                                                    </h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                        aria-label="Close">
-                                                        <span aria-hidden="true"></span>
-                                                    </button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <p> Estas seguro de eliminar al alumno?</p>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <form action="{% url 'eliminar' alumno.alumno_id %}" method="POST">
-                                                        {% csrf_token %}
-                                                        <input type="submit" class="btn btn-primary" value="Delete">
-                                                    </form> 
-                                                    <button type="button" class="btn btn-secondary"
-                                                        data-bs-dismiss="modal">Cancelar</button>
-                                                </div>
+                                <div class="modal fade" id="eliminar{{alumno.alumno_id}}" tabindex="-1"
+                                    aria-hidden="true">
+                                    <div class="modal-dialog" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Eliminar Alumno</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>¿Estás seguro de eliminar a <strong>{{ alumno.nombre_completo
+                                                        }}</strong>?</p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <form action="{% url 'eliminar' alumno.alumno_id %}" method="POST">
+                                                    {% csrf_token %}
+                                                    <input type="submit" class="btn btn-danger" value="Eliminar">
+                                                </form>
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Cancelar</button>
                                             </div>
                                         </div>
                                     </div>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                </p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
-        {% else %}
-        <h5 class="alert alert-primary ms-4 me-4">Sin Registro de Alumnos</h5>
-        {% endif %}
-
     </div>
+    {% endif %}
+
+    <div class="card border-light ms-4 me-4 mb-4">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                
+                <span class="fs-5">
+                    <i class="fa-solid fa-chalkboard-user"></i> Gestión de Instructores
+                </span>
+                
+                <div>
+                    <a href="{% url 'agregar_instructor' %}" class="btn btn-light btn-sm text-success fw-bold shadow-sm">
+                        <i class="fa-solid fa-plus"></i> Agregar Instructor
+                    </a>
+                </div>
+            </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Instructor</th>
+                            <th scope="col">Especialidad</th>
+                            <th scope="col">Fecha Ingreso</th>
+                            <th scope="col">Estado</th>
+                            <th scope="col">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for instructor in instructores %}
+                        <tr>
+                            <td>{{ instructor.instructor_id }}</td>
+                            <td>{{ instructor.nombre_completo }}</td>
+                            <td>{{ instructor.especialidad }}</td>
+                            <td>{{ instructor.fecha_ingreso }}</td>
+                            <td>
+                                {% if instructor.estado == 'Activo' %}
+                                <span class="badge bg-success">Activo</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Inactivo</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button type="button" class="btn-success me-1" data-bs-toggle="modal"
+                                    data-bs-target="#infoInst{{instructor.instructor_id}}">
+                                    <i class="fa-solid fa-circle-info fa-lg"></i>
+                                </button>
+
+                                <div class="modal fade" id="infoInst{{instructor.instructor_id}}" tabindex="-1"
+                                    aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-success text-white">
+                                                <h5 class="modal-title">Instructor: {{ instructor.nombre_completo }}
+                                                </h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <ul class="list-unstyled">
+                                                    <li><strong>ID:</strong> {{ instructor.instructor_id }}</li>
+                                                    <li><strong>Especialidad:</strong> {{ instructor.especialidad }}
+                                                    </li>
+                                                    <li><strong>Fecha de Ingreso:</strong> {{ instructor.fecha_ingreso }}</li>
+                                                    <li><strong>Estado:</strong>
+                                                        {% if instructor.estado == 'Activo' %}
+                                                        <span class="badge bg-success">Activo</span>
+                                                        {% else %}
+                                                        <span class="badge bg-secondary">Inactivo</span>
+                                                        {% endif %}
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Cerrar</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <a class="btn btn-warning me-1"
+                                    href="{% url 'editar_instructor' instructor.instructor_id %}">
+                                    <i class="fa-solid fa-pen-to-square fa-lg"></i>
+                                </a>
+
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal"
+                                    data-bs-target="#eliminarInst{{instructor.instructor_id}}">
+                                    <i class="fa-solid fa-trash-can fa-lg"></i>
+                                </button>
+
+                                <div class="modal fade" id="eliminarInst{{instructor.instructor_id}}" ...>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">No hay instructores registrados.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
 </div>
 {% endblock %}
