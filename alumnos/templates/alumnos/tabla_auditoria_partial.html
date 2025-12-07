@@ -1,0 +1,38 @@
+<div class="table-responsive">
+    <table class="table table-hover table-sm align-middle">
+        <thead class="table-light">
+            <tr>
+                <th style="width: 15%;">Fecha</th>
+                <th style="width: 10%;">Usuario</th>
+                <th style="width: 10%;">Acción</th>
+                <th>Detalle (Valores Previos vs Nuevos)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td>{{ log.fecha_cambio|date:"d/m/Y H:i" }}</td>
+                <td class="fw-bold text-secondary">{{ log.usuario }}</td>
+                <td>
+                    {% if log.accion == 'INSERT' %}
+                        <span class="badge bg-success">INSERT</span>
+                    {% elif log.accion == 'UPDATE' %}
+                        <span class="badge bg-primary">UPDATE</span>
+                    {% elif log.accion == 'DELETE' %}
+                        <span class="badge bg-danger">DELETE</span>
+                    {% else %}
+                        <span class="badge bg-secondary">{{ log.accion }}</span>
+                    {% endif %}
+                </td>
+                <td class="small text-muted" style="font-family: monospace;">
+                    {{ log.descripcion }}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="text-center text-muted">Sin registros de cambios.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

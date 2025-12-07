@@ -15,4 +15,16 @@ urlpatterns = [
     path('agregar/', views.add, name='agregar'),
     path('editar/<int:id>/', views.editar, name='editar'),
     path('eliminar/<int:id>/', views.eliminar, name='eliminar'),
+
+    # Nuevas rutas
+    path('reportes/', views.reportes_view, name='reportes'),
+    path('inscripciones/nueva/', views.nueva_inscripcion, name='nueva_inscripcion'),
+    path('inscripciones/', views.listar_inscripciones, name='listar_inscripciones'), # Necesitarás crear esta vista simple
+    path('auditoria/', views.auditoria_view, name='auditoria'),
+
+    path('editar_instructor/<int:id>/', views.editar_instructor, name='editar_instructor'),
+    path('eliminar_instructor/<int:id>/', views.eliminar_instructor, name='eliminar_instructor'),
+    path('agregar_instructor/', views.agregar_instructor, name='agregar_instructor'),
+
+    path('aplicar_descuento/<int:id>/', views.aplicar_descuento_view, name='aplicar_descuento'),
 ]

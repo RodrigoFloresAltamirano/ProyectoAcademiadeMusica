@@ -1,5 +1,5 @@
 from django import forms
-from .models import Alumnos
+from .models import Alumnos, Cursos, Instructores
 
 class AlumnoForm(forms.ModelForm):
     class Meta:
@@ -25,4 +25,31 @@ class AlumnoForm(forms.ModelForm):
             'tipo_documento': forms.TextInput(attrs={'class': 'form-control'}),
             'numero_documento': forms.TextInput(attrs={'class': 'form-control'}),
             'fecha_registro': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+        }
+
+class AltaInscripcionForm(forms.Form):
+    # Selectores para las llaves foráneas
+    alumno = forms.ModelChoiceField(queryset=Alumnos.objects.all(), label="Alumno")
+    curso = forms.ModelChoiceField(queryset=Cursos.objects.filter(estado_curso='Activo'), label="Curso")
+    instructor = forms.ModelChoiceField(queryset=Instructores.objects.filter(estado='Activo'), label="Instructor")
+    
+    # Datos de pago y detalle
+    metodo_pago = forms.ChoiceField(choices=[('Efectivo', 'Efectivo'), ('Tarjeta', 'Tarjeta'), ('Transferencia', 'Transferencia')])
+    total_pago = forms.DecimalField(max_digits=10, decimal_places=2)
+    concepto = forms.CharField(max_length=50, initial="Mensualidad")
+    
+    # Estos campos son para el Detalle_Inscripciones que pide tu SP
+    cantidad = forms.IntegerField(initial=1)
+    precio_unitario = forms.DecimalField(max_digits=10, decimal_places=2)
+
+class InstructorForm(forms.ModelForm):
+    class Meta:
+        model = Instructores
+        fields = ['instructor_id', 'nombre_completo', 'especialidad', 'estado', 'fecha_ingreso']
+        widgets = {
+            'instructor_id': forms.NumberInput(attrs={'class': 'form-control', 'readonly': 'readonly'}),
+            'nombre_completo': forms.TextInput(attrs={'class': 'form-control'}),
+            'especialidad': forms.TextInput(attrs={'class': 'form-control'}),
+            'estado': forms.Select(choices=[('Activo', 'Activo'), ('Inactivo', 'Inactivo')], attrs={'class': 'form-control'}),
+            'fecha_ingreso': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
         }

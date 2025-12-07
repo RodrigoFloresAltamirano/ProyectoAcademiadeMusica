@@ -1,0 +1,51 @@
+{% extends "alumnos/base.html" %}
+
+{% block body %}
+<div class="container-fluid mt-4 mb-5">
+    <h3 class="mb-4"><i class="fa-solid fa-shield-halved"></i> Auditoría del Sistema</h3>
+
+    <div class="btn-group mb-4" role="group">
+        <a href="#alumnos" class="btn btn-outline-primary">Alumnos</a>
+        <a href="#cursos" class="btn btn-outline-primary">Cursos</a>
+        <a href="#instructores" class="btn btn-outline-primary">Instructores</a>
+        <a href="#inscripciones" class="btn btn-outline-primary">Inscripciones</a>
+    </div>
+
+    <div class="card border-primary mb-4 shadow-sm" id="alumnos">
+        <div class="card-header bg-primary text-white">
+            <i class="fa-solid fa-graduation-cap"></i> Auditoría de Alumnos
+        </div>
+        <div class="card-body">
+            {% include "alumnos/tabla_auditoria_partial.html" with logs=aud_alumnos %}
+        </div>
+    </div>
+
+    <div class="card border-info mb-4 shadow-sm" id="cursos">
+        <div class="card-header bg-info text-white">
+            <i class="fa-solid fa-book"></i> Auditoría de Cursos
+        </div>
+        <div class="card-body">
+            {% include "alumnos/tabla_auditoria_partial.html" with logs=aud_cursos %}
+        </div>
+    </div>
+
+    <div class="card border-success mb-4 shadow-sm" id="instructores">
+        <div class="card-header bg-success text-white">
+            <i class="fa-solid fa-chalkboard-user"></i> Auditoría de Instructores
+        </div>
+        <div class="card-body">
+            {% include "alumnos/tabla_auditoria_partial.html" with logs=aud_instructores %}
+        </div>
+    </div>
+
+    <div class="card border-warning mb-4 shadow-sm" id="inscripciones">
+        <div class="card-header bg-warning text-dark">
+            <i class="fa-solid fa-file-signature"></i> Auditoría de Inscripciones
+        </div>
+        <div class="card-body">
+            {% include "alumnos/tabla_auditoria_partial.html" with logs=aud_inscripciones %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}

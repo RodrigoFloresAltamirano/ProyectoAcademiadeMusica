@@ -1,0 +1,33 @@
+{% extends "alumnos/base.html" %}
+
+{% block body %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8">
+        <div class="card border-primary shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fa-solid fa-file-signature"></i> Nueva Inscripción
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    <table class="table table-borderless">
+                        {{ form.as_table }}
+                    </table>
+
+                    <div class="alert alert-info mt-3">
+                        <i class="fa-solid fa-circle-info"></i> 
+                        <strong>Nota:</strong> Si el alumno ya cuenta con historial, el descuento se aplicará automáticamente al guardar.
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <a href="{% url 'listar_inscripciones' %}" class="btn btn-secondary me-md-2">Cancelar</a>
+                        <button type="submit" class="btn btn-primary">Guardar Inscripción</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
