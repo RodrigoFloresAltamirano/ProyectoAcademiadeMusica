@@ -1,17 +1,42 @@
 {% extends "alumnos/base.html" %}
 
 {% block body %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">Iniciar Sesión</div>
-            <div class="card-body">
-                <form method="post">
-                    {% csrf_token %}
-                    {{ form.as_p }}
-                    <button type="submit" class="btn btn-primary w-100">Ingresar</button>
-                </form>
-            </div>
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    
+    <div class="card shadow border-0" style="width: 100%; max-width: 400px;">
+        
+        <div class="card-header bg-danger text-white text-center py-3">
+            <h4 class="mb-0"><i class="fa-solid fa-user-lock"></i> Iniciar Sesión</h4>
+        </div>
+
+        <div class="card-body p-4">
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="id_username" class="form-label fw-bold">Usuario</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="fa-solid fa-user"></i></span>
+                        <input type="text" name="username" class="form-control" placeholder="Ingrese su usuario" required id="id_username">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="id_password" class="form-label fw-bold">Contraseña</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="fa-solid fa-key"></i></span>
+                        <input type="password" name="password" class="form-control" placeholder="Ingrese su contraseña" required id="id_password">
+                    </div>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-danger btn-lg">Ingresar</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="card-footer text-center bg-white border-0 pb-3">
+            <small class="text-muted">Academia de Música &copy; 2025</small>
         </div>
     </div>
 </div>
