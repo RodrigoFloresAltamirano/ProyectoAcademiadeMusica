@@ -94,8 +94,7 @@
                                                     aria-label="Close"></button>
                                             </div>
                                             <div class="modal-body">
-                                                <p>¿Estás seguro de eliminar a <strong>{{ alumno.nombre_completo
-                                                        }}</strong>?</p>
+                                                <p>¿Estás seguro de eliminar a <strong>{{ alumno.nombre_completo }}</strong>?</p>
                                             </div>
                                             <div class="modal-footer">
                                                 <form action="{% url 'eliminar' alumno.alumno_id %}" method="POST">
