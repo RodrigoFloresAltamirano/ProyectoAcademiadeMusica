@@ -766,8 +766,34 @@ BEGIN
 	JOIN Cursos c ON i.curso_id = c.curso_id
 	LEFT JOIN Instructores ins ON i.instructor_id = ins.instructor_id;
 END;
+--se modifico resumen_gral_academia para saber que hubo descuento
+ALTER PROCEDURE resumen_gral_academia
+AS
+BEGIN
+    SELECT 
+        i.inscripcion_id, 
+        a.nombre_completo AS alumno, 
+        c.nombre_curso, 
+        c.costo AS costo_original, -- <--- Comparación
+        ins.nombre_completo AS instructor, 
+        i.fecha_inscripcion, 
+        i.total_pago
+    FROM Inscripciones i
+    JOIN Alumnos a ON i.alumno_id = a.alumno_id
+    JOIN Cursos c ON i.curso_id = c.curso_id
+    LEFT JOIN Instructores ins ON i.instructor_id = ins.instructor_id
+    ORDER BY i.fecha_inscripcion DESC;
+END;
 
 EXEC resumen_gral_academia;
+
+--test para saber si sale el descuento
+UPDATE Inscripciones 
+SET total_pago = 1.00 
+WHERE inscripcion_id = 3;
+
+INSERT INTO Inscripciones (alumno_id, curso_id, instructor_id, fecha_inscripcion, metodo_pago, estado_inscripcion, total_pago)
+VALUES (13, 1, 1, '2024-01-01', 'Efectivo', 'Finalizada', 3000);
 
 --•	RANKING: Para mostrar el Top 5 cursos más solicitados.
 CREATE PROCEDURE top_cursos_mas_solicitados
@@ -864,3 +890,71 @@ SELECT * FROM Inscripciones
 SELECT * FROM Aud_Log_Inscrip
 
 
+-- 1. Auditoría de ALUMNOS
+CREATE OR ALTER PROCEDURE sp_audit_alumnos
+AS
+BEGIN
+    SELECT 'Alumnos' as tabla, accion, usuario, fecha_cambio, descripcion FROM Aud_Log_Alumnos
+    UNION ALL
+    SELECT 'Alumnos', accion, usuario, fecha_cambio, descripcion FROM Aud_Act_Alumnos
+    UNION ALL
+    SELECT 'Alumnos', accion, usuario, fecha_cambio, descripcion FROM Aud_Elim_Alumnos
+    ORDER BY fecha_cambio DESC;
+END;
+GO
+
+-- 2. Auditoría de CURSOS
+CREATE OR ALTER PROCEDURE sp_audit_cursos
+AS
+BEGIN
+    SELECT 'Cursos' as tabla, accion, usuario, fecha_cambio, descripcion FROM Aud_Log_Cursos
+    UNION ALL
+    SELECT 'Cursos', accion, usuario, fecha_cambio, descripcion FROM Aud_Act_Cursos
+    UNION ALL
+    SELECT 'Cursos', accion, usuario, fecha_cambio, descripcion FROM Aud_Elim_Cursos
+    ORDER BY fecha_cambio DESC;
+END;
+GO
+
+-- 3. Auditoría de INSTRUCTORES
+CREATE OR ALTER PROCEDURE sp_audit_instructores
+AS
+BEGIN
+    SELECT 'Instructores' as tabla, accion, usuario, fecha_cambio, descripcion FROM Aud_Log_Instruc
+    UNION ALL
+    SELECT 'Instructores', accion, usuario, fecha_cambio, descripcion FROM Aud_Act_Instruc
+    UNION ALL
+    SELECT 'Instructores', accion, usuario, fecha_cambio, descripcion FROM Aud_Elim_Instruc
+    ORDER BY fecha_cambio DESC;
+END;
+GO
+
+-- 4. Auditoría de INSCRIPCIONES
+CREATE OR ALTER PROCEDURE sp_audit_inscripciones
+AS
+BEGIN
+    SELECT 'Inscripciones' as tabla, accion, usuario, fecha_cambio, descripcion FROM Aud_Log_Inscrip
+    UNION ALL
+    SELECT 'Inscripciones', accion, usuario, fecha_cambio, descripcion FROM Aud_Act_Inscrip
+    UNION ALL
+    SELECT 'Inscripciones', accion, usuario, fecha_cambio, descripcion FROM Aud_Elim_Inscrip
+    ORDER BY fecha_cambio DESC;
+END;
+GO
+
+CREATE OR ALTER PROCEDURE resumen_gral_academia
+AS
+BEGIN
+    SELECT 
+        i.inscripcion_id, 
+        a.nombre_completo AS alumno, 
+        c.nombre_curso, 
+        ins.nombre_completo AS instructor, 
+        i.fecha_inscripcion, 
+        i.total_pago
+    FROM Inscripciones i
+    JOIN Alumnos a ON i.alumno_id = a.alumno_id
+    JOIN Cursos c ON i.curso_id = c.curso_id
+    LEFT JOIN Instructores ins ON i.instructor_id = ins.instructor_id;
+END;
+GO

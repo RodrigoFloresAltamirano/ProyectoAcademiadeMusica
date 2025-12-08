@@ -1,0 +1,141 @@
+{% extends "alumnos/base.html" %}
+
+{% block body %}
+<h3 class="m-4">Gestionar Cursos</h3>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card border-info ms-4 me-4 mb-4">
+
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <span class="fs-5">
+                    <i class="fa-solid fa-music"></i> Registro de Cursos
+                </span>
+            </div>
+
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">Nombre del Curso</th>
+                                <th scope="col">Nivel</th>
+                                <th scope="col">Capacidad</th> <th scope="col">Estado</th>
+                                <th scope="col" class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for curso in cursos %}
+                            <tr>
+                                <td>{{ curso.curso_id }}</td>
+                                <td class="fw-bold">{{ curso.nombre_curso }}</td>
+                                <td>{{ curso.nivel }}</td>
+                                
+                                <td>
+                                    {{ curso.cupo_ocupado }} / <strong>{{ curso.capacidad }}</strong>
+                                    {% if curso.cupo_ocupado >= curso.capacidad %}
+                                        <span class="badge bg-danger rounded-pill">Lleno</span>
+                                    {% else %}
+                                        <span class="badge bg-success rounded-pill">Disp.</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if curso.estado_curso == 'Activo' %}
+                                        <span class="badge bg-success">Activo</span>
+                                    {% elif curso.estado_curso == 'Cancelado' %}
+                                        <span class="badge bg-danger">Cancelado</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ curso.estado_curso }}</span>
+                                    {% endif %}
+                                </td>
+                                
+                                <td>
+                                    <div class="d-flex justify-content-end align-items-center gap-2">
+                                        
+                                        <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal"
+                                            data-bs-target="#editarCupo{{curso.curso_id}}" title="Actualizar Disponibilidad">
+                                            <i class="fa-solid fa-pen-to-square"></i> Editar Cupo
+                                        </button>
+
+                                        <button type="button" class="btn btn-info text-white btn-sm" data-bs-toggle="modal"
+                                            data-bs-target="#infoCurso{{curso.curso_id}}" title="Ver Detalles">
+                                            <i class="fa-solid fa-eye"></i> Info
+                                        </button>
+                                    </div>
+
+                                    <div class="modal fade" id="editarCupo{{curso.curso_id}}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header bg-warning">
+                                                    <h5 class="modal-title text-dark">Actualizar Disponibilidad</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <form action="{% url 'actualizar_cupo' curso.curso_id %}" method="POST">
+                                                    {% csrf_token %}
+                                                    <div class="modal-body text-start">
+                                                        <p>Curso: <strong>{{ curso.nombre_curso }}</strong></p>
+                                                        <p class="text-muted small">Al cambiar la capacidad total, se habilitarán o cerrarán inscripciones automáticamente.</p>
+                                                        
+                                                        <div class="mb-3">
+                                                            <label class="form-label">Cupos Ocupados Actuales:</label>
+                                                            <input type="text" class="form-control" value="{{ curso.cupo_ocupado }}" disabled>
+                                                        </div>
+
+                                                        <div class="mb-3">
+                                                            <label for="capacidad" class="form-label fw-bold">Nueva Capacidad Total:</label>
+                                                            <input type="number" class="form-control" name="capacidad" 
+                                                                value="{{ curso.capacidad }}" min="{{ curso.cupo_ocupado }}" required>
+                                                            <div class="form-text">No puede ser menor a los cupos ya ocupados.</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                        <button type="submit" class="btn btn-warning">Guardar Cambios</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="modal fade" id="infoCurso{{curso.curso_id}}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header bg-info text-white">
+                                                    <h5 class="modal-title">Detalle del Curso #{{ curso.curso_id }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body text-start">
+                                                    <ul class="list-unstyled">
+                                                        <li><strong>Curso:</strong> {{ curso.nombre_curso }}</li>
+                                                        <li><strong>Nivel:</strong> {{ curso.nivel }}</li>
+                                                        <li><strong>Costo:</strong> ${{ curso.costo }}</li>
+                                                        <li class="mt-2 pt-2 border-top">
+                                                            <strong>Fechas:</strong> 
+                                                            {{ curso.fecha_inicio|date:"d/m/Y" }} - {{ curso.fecha_fin|date:"d/m/Y" }}
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center p-4">No hay cursos registrados.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

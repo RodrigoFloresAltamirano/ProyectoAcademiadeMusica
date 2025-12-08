@@ -2,16 +2,21 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required, user_passes_test
-
-from .models import Alumnos, Inscripciones, Instructores
-from .forms import AlumnoForm, AltaInscripcionForm, InstructorForm
 from django.db import connection
 from django.contrib import messages
-from decimal import Decimal #para el descuento
+
+from .models import Alumnos, Inscripciones, Instructores, Cursos
+from .forms import AlumnoForm, AltaInscripcionForm, InstructorForm
+from decimal import Decimal
+from datetime import datetime
+
+import json
+
+# Create your views here.
 
 def dictfetchall(cursor):
     """
-    Convierte todas las filas de un cursor de base de datos en una lista de diccionarios.
+        lista de diccionarios.
     """
     columns = [col[0] for col in cursor.description]
     return [
@@ -19,10 +24,8 @@ def dictfetchall(cursor):
         for row in cursor.fetchall()
     ]
 
-# Create your views here.
-
 def es_administrador(user):
-    # Devuelve True si es superusuario O si pertenece al grupo "Administradores"
+    # True si es superusuario o Administradores
     return user.is_superuser or user.groups.filter(name='Administradores').exists()
 
 @login_required(login_url='login') # Obliga a iniciar sesión
@@ -30,7 +33,7 @@ def es_administrador(user):
 def index(request):
     return render(request, 'alumnos/index.html',{
         'alumnos': Alumnos.objects.all(),
-        'instructores': Instructores.objects.all() # <--- AGREGADO NUEVO
+        'instructores': Instructores.objects.all()
     })
 
 def view_alumno(request, id):
@@ -46,8 +49,7 @@ def add(request):
             
             form.save() 
             
-            # Redirigir a la vista de índice para ver el nuevo alumno
-            # Es mejor que renderizar el mismo formulario con 'success'
+            # Redirigir al index para ver el nuevo alumno
             return redirect('index') 
             
     else:
@@ -82,17 +84,14 @@ def eliminar(request, id):
     # request.POST para asegurar que solo se ejecuta con el botón del modal
     if request.method == 'POST':
         try:
-            # El ID es alumno_id
             alumno_id = id 
             
             # Obtener el alumno a eliminar
             alumno = Alumnos.objects.get(pk=alumno_id)
             
-            # Eliminar registros dependientes
             # Borra filas en Inscripciones asociadas a este alumno.
             Inscripciones.objects.filter(alumno_id=alumno_id).delete()
 
-            # Eliminar el alumno
             alumno.delete() 
 
             return redirect('index')
@@ -101,7 +100,6 @@ def eliminar(request, id):
             # Si el alumno ya fue eliminado se redirige
             return redirect('index')
             
-    # Solo redirige
     return redirect('index')
     pass
 
@@ -121,28 +119,28 @@ def home_redirect(request):
     elif usuario.groups.filter(name='Alumnos').exists():
         return redirect('estudiantes_home') 
     
-    # Sin Permiso (Si no tiene grupo, rol)
+    # Sin grupo - rol
     else:
         return render(request, 'alumnos/sin_permiso.html')
 
 @login_required
 @user_passes_test(es_administrador)
 def reportes_view(request):
-    data_top_cursos = []
-    data_mensual = []
+    top_cursos = []
+    top_instructores = []
 
     with connection.cursor() as cursor:
-        # 1. Ejecutar SP de Top Cursos
+        # Reporte de Cursos más solicitados
         cursor.execute("EXEC top_cursos_mas_solicitados") 
-        data_top_cursos = dictfetchall(cursor)
+        top_cursos = dictfetchall(cursor)
 
-        # 2. Ejecutar SP de Pivote Mensual (Este es complejo porque devuelve columnas dinámicas)
-        cursor.execute("EXEC InscripcionesPorMes2025")
-        data_mensual = dictfetchall(cursor)
+        # Reporte de Instructores con más alumnos
+        cursor.execute("EXEC TopInstructores")
+        top_instructores = dictfetchall(cursor)
 
     return render(request, 'alumnos/reportes.html', {
-        'top_cursos': data_top_cursos,
-        'mensual': data_mensual
+        'top_cursos': top_cursos,
+        'top_instructores': top_instructores
     })
 
 @login_required
@@ -153,36 +151,28 @@ def nueva_inscripcion(request):
         if form.is_valid():
             data = form.cleaned_data
             alumno_id = data['alumno'].alumno_id
+            curso_seleccionado = data['curso']
             
-            # 1. Precios originales
-            precio_unitario = data['precio_unitario']
-            total_pago = data['total_pago']
+            # Obtener precio de sql
+            precio_real = curso_seleccionado.costo
             
-            # 2. Lógica Simplificada: ¿Ya se ha inscrito antes?
-            es_recurrente = Inscripciones.objects.filter(alumno_id=alumno_id).exists()
+            # Variables
+            precio_final = precio_real
+            total_final = precio_real
             
-            # ### DEBUG: ESTO IMPRIMIRÁ EN TU CONSOLA SI LO DETECTA O NO ###
-            print(f"--- REVISANDO ALUMNO ID: {alumno_id} ---")
-            print(f"--- ¿ES RECURRENTE?: {es_recurrente} ---")
-
-            # 3. Si es recurrente, aplicamos 10% de descuento
-            if es_recurrente:
-                descuento = Decimal('0.10') # 10% (Ahora funcionará porque importaste Decimal)
+            # Descuento Diciembre
+            mes_actual = datetime.now().month
+            
+            if mes_actual == 12: # Diciembre
+                descuento = Decimal('0.20')
+                precio_final = precio_real * (1 - descuento)
+                total_final = precio_real * (1 - descuento)
                 
-                # Bajamos los precios
-                precio_unitario = precio_unitario * (1 - descuento)
-                total_pago = total_pago * (1 - descuento)
-                
-                # Avisamos al usuario
-                messages.success(request, f"¡Alumno Recurrente! Se aplicó descuento automático. Nuevo total: ${total_pago:.2f}")
-            else:
-                # ### DEBUG: SI ENTRA AQUÍ, ES QUE NO ENCONTRÓ HISTORIAL ###
-                print("--- NO SE APLICÓ DESCUENTO ---")
+                # Mensaje Descuento
+                messages.success(request, f"Se aplicó un 20% de descuento. Precio final: ${total_final:.2f}")
+            
+            subtotal = data['cantidad'] * precio_final
 
-            # Calculamos subtotal nuevo
-            subtotal = data['cantidad'] * precio_unitario
-
-            # 4. Guardamos usando tu procedimiento almacenado
             try:
                 with connection.cursor() as cursor:
                     sql = """
@@ -196,9 +186,9 @@ def nueva_inscripcion(request):
                         @subtotal=%s
                     """
                     params = [
-                        alumno_id, data['curso'].curso_id, data['instructor'].instructor_id,
-                        data['metodo_pago'], total_pago, data['concepto'],
-                        data['cantidad'], precio_unitario, subtotal
+                        alumno_id, curso_seleccionado.curso_id, data['instructor'].instructor_id,
+                        data['metodo_pago'], total_final, data['concepto'],
+                        data['cantidad'], precio_final, subtotal
                     ]
                     cursor.execute(sql, params)
                 
@@ -206,11 +196,17 @@ def nueva_inscripcion(request):
 
             except Exception as e:
                 messages.error(request, f"Error: {e}")
-    
     else:
         form = AltaInscripcionForm()
 
-    return render(request, 'alumnos/nueva_inscripcion.html', {'form': form})
+    # Se envian los precios
+    cursos_activos = Cursos.objects.filter(estado_curso='Activo')
+    precios_dict = {curso.curso_id: str(curso.costo) for curso in cursos_activos}
+
+    return render(request, 'alumnos/nueva_inscripcion.html', {
+        'form': form,
+        'precios_json': json.dumps(precios_dict)
+    })
 
 @login_required
 @user_passes_test(es_administrador)
@@ -221,19 +217,19 @@ def auditoria_view(request):
     aud_inscripciones = []
 
     with connection.cursor() as cursor:
-        # 1. Traer logs de Alumnos
+        # logs de Alumnos
         cursor.execute("EXEC sp_audit_alumnos")
         aud_alumnos = dictfetchall(cursor)
 
-        # 2. Traer logs de Cursos
+        # logs de Cursos
         cursor.execute("EXEC sp_audit_cursos")
         aud_cursos = dictfetchall(cursor)
 
-        # 3. Traer logs de Instructores
+        # logs de Instructores
         cursor.execute("EXEC sp_audit_instructores")
         aud_instructores = dictfetchall(cursor)
 
-        # 4. Traer logs de Inscripciones
+        # logs de Inscripciones
         cursor.execute("EXEC sp_audit_inscripciones")
         aud_inscripciones = dictfetchall(cursor)
     
@@ -249,7 +245,7 @@ def auditoria_view(request):
 def listar_inscripciones(request):
     inscripciones = []
     with connection.cursor() as cursor:
-        # Usamos tu SP 'resumen_gral_academia' para ver nombres en vez de IDs
+        # Se usa 'resumen_gral_academia' para los nombres(ID)
         cursor.execute("EXEC resumen_gral_academia")
         inscripciones = dictfetchall(cursor)
     
@@ -267,7 +263,6 @@ def editar_instructor(request, id):
     else:
         form = InstructorForm(instance=instructor)
     
-    # Reutilizamos el template de editar, o puedes crear uno nuevo 'editar_instructor.html'
     return render(request, 'alumnos/editar.html', { 
         'form': form 
     })
@@ -303,15 +298,13 @@ def agregar_instructor(request):
 @user_passes_test(es_administrador)
 def aplicar_descuento_view(request, id):
     if request.method == 'POST':
-        # Obtenemos el porcentaje del formulario HTML
         porcentaje = request.POST.get('porcentaje')
         
         try:
             with connection.cursor() as cursor:
-                # Ejecutamos tu Procedimiento Almacenado existente
+                # Se ejecuta el procedure
                 cursor.execute("EXEC AplicarDescuento %s, %s", [id, porcentaje])
                 
-            # Opcional: Podrías agregar mensajes flash aquí si tienes el framework configurado
             return redirect('listar_inscripciones')
             
         except Exception as e:
@@ -319,3 +312,45 @@ def aplicar_descuento_view(request, id):
             return redirect('listar_inscripciones')
             
     return redirect('listar_inscripciones')
+
+@login_required
+@user_passes_test(es_administrador)
+def cancelar_inscripcion(request, id):
+    if request.method == 'POST':
+        try:
+            with connection.cursor() as cursor:
+                # Se ejecuta cambio estado a 'Cancelada' y liberar cupo
+                cursor.execute("EXEC cancelar_inscripcion %s", [id])
+                
+            messages.success(request, "Inscripción cancelada y cupo liberado correctamente.")
+        except Exception as e:
+            messages.error(request, f"No se pudo cancelar: {e}")
+            
+    return redirect('listar_inscripciones')
+
+@login_required
+def listar_cursos(request):
+    cursos = []
+    with connection.cursor() as cursor:
+        # Cursos por ID
+        cursor.execute("SELECT * FROM Cursos ORDER BY curso_id DESC")
+        cursos = dictfetchall(cursor)
+    
+    return render(request, 'alumnos/cursos_list.html', {
+        'cursos': cursos
+    })
+
+@login_required
+def actualizar_cupo_view(request, id):
+    if request.method == 'POST':
+        nueva_capacidad = request.POST.get('capacidad')
+        try:
+            with connection.cursor() as cursor:
+                # Se ejecuta actualizarcupocurso
+                cursor.execute("EXEC ActualizarCupoCurso %s, %s", [id, nueva_capacidad])
+                
+            messages.success(request, "Capacidad del curso actualizada correctamente.")
+        except Exception as e:
+            messages.error(request, f"Error al actualizar: {e}")
+            
+    return redirect('listar_cursos')

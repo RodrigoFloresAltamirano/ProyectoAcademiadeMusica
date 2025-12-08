@@ -1,0 +1,83 @@
+{% extends "alumnos/base.html" %}
+
+{% block body %}
+<h3 class="m-4">Panel de Reportes y Estadísticas</h3>
+
+<div class="row ms-3 me-3">
+    
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fa-solid fa-trophy"></i> Cursos Más Solicitados</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Ranking</th>
+                                <th>Curso</th>
+                                <th class="text-center">Inscripciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for curso in top_cursos %}
+                            <tr>
+                                <td class="fw-bold text-center">#{{ forloop.counter }}</td>
+                                <td>{{ curso.nombre_curso }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary rounded-pill">{{ curso.inscripciones }}</span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="text-center">Sin datos.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 border-0 shadow-sm">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="fa-solid fa-chalkboard-user"></i> Top Instructores + Inscripciones</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Instructor</th>
+                                <th>Especialidad</th>
+                                <th class="text-center">Total Alumnos</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for instruc in top_instructores %}
+                            <tr>
+                                <td class="fw-bold">{{ instruc.nombre_completo }}</td>
+                                <td>{{ instruc.especialidad }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-success rounded-pill">{{ instruc.total_inscripciones }}</span>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="3" class="text-center">Sin datos.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="text-center mb-5">
+    <button onclick="window.print()" class="btn btn-outline-secondary">
+        <i class="fa-solid fa-print"></i> Imprimir Reporte
+    </button>
+</div>
+{% endblock %}

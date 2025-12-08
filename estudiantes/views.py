@@ -1,10 +1,11 @@
 from django.shortcuts import render, redirect
 from django.db import connection
 from django.contrib.auth.decorators import login_required
-from alumnos.models import Alumnos
+from alumnos.models import Alumnos, Inscripciones
 from django.contrib import messages
 from .forms import InscripcionForm
 import datetime
+from decimal import Decimal
 
 # Función para convertir resultados SQL a diccionarios
 def dictfetchall(cursor):
@@ -68,38 +69,63 @@ def cursos_disponibles(request):
     })
 
 @login_required
-def inscribirse(request, curso_id=None): # curso_id=None como parámetro
+def inscribirse(request, curso_id=None): 
     if request.method == 'POST':
         form = InscripcionForm(request.POST)
         if form.is_valid():
             try:
-                # Obtener datos
+                # 1. Obtener datos básicos
                 alumno = Alumnos.objects.get(email=request.user.email)
                 curso_obj = form.cleaned_data['curso']
                 instructor_obj = form.cleaned_data['instructor']
                 metodo_pago = form.cleaned_data['metodo_pago']
                 
-                # Parámetros
+                # 2. Configurar Precios Base
                 fecha_hoy = datetime.date.today()
-                costo = curso_obj.costo 
+                precio_base = curso_obj.costo
+                total_final = precio_base
+                mensaje_exito = f'¡Inscripción exitosa al curso {curso_obj.nombre_curso}!'
                 
-                # Ejecutar el procedimiento
+                # --- INICIO LÓGICA DE DESCUENTOS ---
+                
+                # A) ¿Es Navidad? (Prioridad 1: 20%)
+                if fecha_hoy.month == 12:
+                    descuento = Decimal('0.20')
+                    total_final = precio_base * (1 - descuento)
+                    mensaje_exito = f'Se aplico descuento 20% por Promocion Diciembre {curso_obj.nombre_curso}.'
+                
+                # B) ¿Es Recurrente? (Prioridad 2: 10% - Solo si no se aplicó Navidad)
+                else:
+                    es_recurrente = Inscripciones.objects.filter(alumno_id=alumno.alumno_id).exists()
+                    if es_recurrente:
+                        descuento = Decimal('0.10')
+                        total_final = precio_base * (1 - descuento)
+                        mensaje_exito = f'🌟 ¡Eres Alumno Recurrente! Tienes 10% de descuento en {curso_obj.nombre_curso}.'
+
+                # --- FIN LÓGICA DE DESCUENTOS ---
+
+                # 3. Ejecutar el procedimiento con el PRECIO CALCULADO
                 with connection.cursor() as cursor:
                     sql = """
                         EXEC registrar_inscripcion 
                         @alumno_id=%s, @curso_id=%s, @instructor_id=%s, 
                         @fecha_inscripcion=%s, @metodo_pago=%s, @estado_inscripcion=%s, 
-                        @total_pago=%s, @concepto=%s, @cantidad=%s, 
-                        @precio_unitario=%s, @subtotal=%s
+                        @total_pago=%s, -- Enviamos el total con descuento
+                        @concepto=%s, @cantidad=%s, 
+                        @precio_unitario=%s, -- Enviamos el precio unitario con descuento
+                        @subtotal=%s
                     """
                     params = [
                         alumno.alumno_id, curso_obj.curso_id, instructor_obj.instructor_id,
-                        fecha_hoy, metodo_pago, 'Activa', costo,
-                        f'Inscripción: {curso_obj.nombre_curso}', 1, costo, costo
+                        fecha_hoy, metodo_pago, 'Activa', 
+                        total_final, # <--- Variable calculada
+                        f'Inscripción: {curso_obj.nombre_curso}', 1, 
+                        total_final, # <--- Variable calculada
+                        total_final  # <--- Subtotal (cantidad 1)
                     ]
                     cursor.execute(sql, params)
                 
-                messages.success(request, f'¡Inscripción exitosa al curso {curso_obj.nombre_curso}!')
+                messages.success(request, mensaje_exito)
                 return redirect('estudiantes_historial')
 
             except Exception as e:

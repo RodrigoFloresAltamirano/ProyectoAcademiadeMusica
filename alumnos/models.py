@@ -19,11 +19,9 @@ class Alumnos(models.Model):
 def __str__(self):# Representacion en cadena del objeto Estudiante
     return f'Alumno: {self.nombre_completo}'
 
-# ----------------------------------------------------
 # Modelo para acceder a la tabla Inscripciones
-# ----------------------------------------------------
+
 class Cursos(models.Model):
-    # modelo para Inscripciones
     # Solo es necesario definir la PK y la FK.
     curso_id = models.AutoField(primary_key=True)
     nombre_curso = models.CharField(max_length=100, blank=True, null=True)
@@ -62,7 +60,7 @@ class Inscripciones(models.Model):
     # Relación con Alumnos
     alumno = models.ForeignKey(
         Alumnos, 
-        models.DO_NOTHING, # DO_NOTHING porque la BD ya gestiona la FK
+        models.DO_NOTHING, # la BD ya gestiona la FK
         db_column='alumno_id', 
         related_name='inscripciones'
     )
