@@ -438,16 +438,15 @@ BEGIN
 	SET estado_curso = 'Activo'
 	FROM Cursos
 	INNER JOIN inserted ON Cursos.curso_id = inserted.curso_id
-	WHERE Cursos.estado_curso <> 'Activo'
-	AND GETDATE() BETWEEN Cursos.fecha_inicio AND Cursos.fecha_fin;
+	WHERE GETDATE() BETWEEN Cursos.fecha_inicio AND Cursos.fecha_fin
+	AND Cursos.estado_curso = 'Activo';
 
 	--ESTADO CANCELADO
 	UPDATE Cursos
 	SET estado_curso = 'Cancelado'
 	FROM Cursos
 	INNER JOIN inserted ON  Cursos.curso_id = inserted.curso_id
-	WHERE Cursos.estado_curso = 'Cancelado'
-	AND Cursos.estado_curso <> 'Cancelado';
+	WHERE inserted.estado_curso = 'Cancelado';
 
 	--ESTADO FINALIZADO
 	UPDATE Cursos
@@ -455,7 +454,7 @@ BEGIN
 	FROM Cursos
 	INNER JOIN  inserted ON Cursos.curso_id = inserted.curso_id
 	WHERE GETDATE() > Cursos.fecha_fin
-	AND Cursos.estado_curso <> 'Finalizado'
+	AND Cursos.estado_curso = 'Finalizado'
 	
 	--REGISTRO EN TABLA AUDITORIA
 	INSERT INTO Aud_Act_Cursos(tabla_afectada, accion, usuario, descripcion)
@@ -473,6 +472,30 @@ BEGIN
     INNER JOIN deleted d ON i.curso_id = d.curso_id;
 END;
 
+
+	--•	Generación de alertas por baja demanda de cursos o exceso de cupos vacíos.
+CREATE TRIGGER trg_alerta_baja_demanda
+ON Cursos
+AFTER UPDATE
+AS
+BEGIN
+    IF UPDATE(cupo_ocupado)
+    BEGIN
+        DECLARE @curso_id INT, @cupo_ocupado INT, @capacidad INT;
+        
+        SELECT @curso_id = curso_id, 
+		@cupo_ocupado = cupo_ocupado, 
+		@capacidad = capacidad
+
+        FROM inserted;
+                
+        IF @cupo_ocupado < 05.0
+        BEGIN
+            PRINT 'ALERTA: Curso ID ' + CAST(@curso_id AS VARCHAR) + 
+			' tiene solo ' + CAST(@cupo_ocupado AS VARCHAR) + 'cupos ocupados';
+        END
+    END
+END;
 
 --2. TRANSACCIONES
 	--Proceso completo de inscripción (Inscripciones + Detalle_Inscripciones) dentro de una transacción atómica.
@@ -795,6 +818,26 @@ WHERE inscripcion_id = 3;
 INSERT INTO Inscripciones (alumno_id, curso_id, instructor_id, fecha_inscripcion, metodo_pago, estado_inscripcion, total_pago)
 VALUES (13, 1, 1, '2024-01-01', 'Efectivo', 'Finalizada', 3000);
 
+CREATE OR ALTER PROCEDURE resumen_gral_academia
+AS
+BEGIN
+    SELECT 
+        i.inscripcion_id, 
+        a.nombre_completo AS alumno, 
+        c.nombre_curso, 
+        c.costo AS costo_original, -- Necesario para tu lógica de descuentos
+        ins.nombre_completo AS instructor, 
+        i.fecha_inscripcion, 
+        i.total_pago,
+        i.estado_inscripcion -- <--- ESTO ES LO QUE TE FALTABA
+    FROM Inscripciones i
+    JOIN Alumnos a ON i.alumno_id = a.alumno_id
+    JOIN Cursos c ON i.curso_id = c.curso_id
+    LEFT JOIN Instructores ins ON i.instructor_id = ins.instructor_id
+    ORDER BY i.fecha_inscripcion DESC;
+END;
+GO
+
 --•	RANKING: Para mostrar el Top 5 cursos más solicitados.
 CREATE PROCEDURE top_cursos_mas_solicitados
 AS
@@ -810,6 +853,21 @@ BEGIN
 END;
 
 EXEC top_cursos_mas_solicitados
+
+--•	RANKING: Para mostrar el Top 5 Instructores con mas inscripciones
+CREATE OR ALTER PROCEDURE TopInstructores
+AS
+BEGIN
+    SELECT TOP 5 
+        Ins.nombre_completo, 
+        Ins.especialidad, 
+        COUNT(I.inscripcion_id) as total_inscripciones
+    FROM Instructores Ins
+    INNER JOIN Inscripciones I ON Ins.instructor_id = I.instructor_id
+    GROUP BY Ins.instructor_id, Ins.nombre_completo, Ins.especialidad
+    ORDER BY total_inscripciones DESC;
+END;
+GO
 -- 7. Índices y Sequence (10%)
 -- Índice único en email de Alumnos
 CREATE NONCLUSTERED INDEX IX_Alumnos_Email ON Alumnos (email);
@@ -870,6 +928,12 @@ VALUES
 ('Curso Guitarra Intermedio', 'Intermedio', 10, 2500.00, 'Activo', 12, 0, '2025-05-01', '2025-07-10'),
 ('Curso Canto Avanzado', 'Avanzado', 8, 2000.00, 'Activo', 10, 0, '2025-09-01', '2025-10-30');
 
+INSERT INTO Cursos (nombre_curso, nivel, duracion_semanas, costo, estado_curso, capacidad, cupo_ocupado, fecha_inicio, fecha_fin)
+VALUES
+('Taller de Batería Inicial', 'Básico', 6, 1800.00, 'Activo', 18, 0, '2025-03-01', '2025-04-12'),
+('Armonía y Composición', 'Avanzado', 16, 4500.00, 'Activo', 8, 0, '2025-04-15', '2025-08-01'),
+('Introducción al Violín', 'Básico', 14, 3200.00, 'Activo', 14, 0, '2025-06-20', '2025-09-26');
+
 -- Insercion de Inscripciones (12 inscripciones, una por cada mes)
 INSERT INTO Inscripciones (alumno_id, curso_id, instructor_id, fecha_inscripcion, metodo_pago, estado_inscripcion, total_pago)
 VALUES
@@ -888,7 +952,6 @@ VALUES
 
 SELECT * FROM Inscripciones
 SELECT * FROM Aud_Log_Inscrip
-
 
 -- 1. Auditoría de ALUMNOS
 CREATE OR ALTER PROCEDURE sp_audit_alumnos
@@ -958,3 +1021,20 @@ BEGIN
     LEFT JOIN Instructores ins ON i.instructor_id = ins.instructor_id;
 END;
 GO
+
+USE Academia_Musica;
+GO
+
+-- 1. Actualizamos el precio (Aplicamos 20% de descuento = Multiplicar por 0.8)
+UPDATE Inscripciones
+SET total_pago = total_pago * 0.8
+FROM Inscripciones i
+JOIN Alumnos a ON i.alumno_id = a.alumno_id
+WHERE a.nombre_completo LIKE '%Luis Dominguez%' -- Filtramos por Luis
+  AND MONTH(i.fecha_inscripcion) = 12           -- Solo inscripciones de Diciembre
+  AND YEAR(i.fecha_inscripcion) = 2025          -- Solo de este año
+  AND i.total_pago = (SELECT costo FROM Cursos c WHERE c.curso_id = i.curso_id); -- Solo si aún tiene el precio full (para no aplicar doble descuento)
+
+-- 2. (Opcional) Si quieres que quede registro del motivo en la base de datos
+-- Si tu tabla tiene la columna 'motivo_descuento' que agregamos antes:
+-- UPDATE Inscripciones SET motivo_descuento = 'Promo Navidad Manual' ...
