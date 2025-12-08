@@ -1038,3 +1038,23 @@ WHERE a.nombre_completo LIKE '%Luis Dominguez%' -- Filtramos por Luis
 -- 2. (Opcional) Si quieres que quede registro del motivo en la base de datos
 -- Si tu tabla tiene la columna 'motivo_descuento' que agregamos antes:
 -- UPDATE Inscripciones SET motivo_descuento = 'Promo Navidad Manual' ...
+
+CREATE OR ALTER PROCEDURE resumen_gral_academia
+AS
+BEGIN
+    SELECT 
+        i.inscripcion_id, 
+        a.nombre_completo AS alumno, 
+        c.nombre_curso, 
+        c.costo AS costo_original, -- Necesario para tu etiqueta de "Promo"
+        ins.nombre_completo AS instructor, 
+        i.fecha_inscripcion, 
+        i.total_pago,
+        i.estado_inscripcion -- CRITICO: Necesario para ocultar las canceladas
+    FROM Inscripciones i
+    JOIN Alumnos a ON i.alumno_id = a.alumno_id
+    JOIN Cursos c ON i.curso_id = c.curso_id
+    LEFT JOIN Instructores ins ON i.instructor_id = ins.instructor_id
+    ORDER BY i.fecha_inscripcion DESC;
+END;
+GO

@@ -202,12 +202,31 @@
                                 </a>
 
                                 <button type="button" class="btn btn-danger" data-bs-toggle="modal"
-                                    data-bs-target="#eliminarInst{{instructor.instructor_id}}">
-                                    <i class="fa-solid fa-trash-can fa-lg"></i>
-                                </button>
+    data-bs-target="#eliminarInst{{instructor.instructor_id}}">
+    <i class="fa-solid fa-trash-can fa-lg"></i>
+</button>
 
-                                <div class="modal fade" id="eliminarInst{{instructor.instructor_id}}" ...>
-                                </div>
+<div class="modal fade" id="eliminarInst{{instructor.instructor_id}}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Eliminar Instructor</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar al instructor <strong>{{ instructor.nombre_completo }}</strong>?</p>
+                <p class="text-danger"><small>Esta acción no se puede deshacer.</small></p>
+            </div>
+            <div class="modal-footer">
+                <form action="{% url 'eliminar_instructor' instructor.instructor_id %}" method="POST">
+                    {% csrf_token %}
+                    <input type="submit" class="btn btn-danger" value="Eliminar">
+                </form>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
                             </td>
                         </tr>
                         {% empty %}

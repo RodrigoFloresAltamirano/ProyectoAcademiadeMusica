@@ -3,7 +3,7 @@ from django.db import connection
 from django.contrib.auth.decorators import login_required
 from alumnos.models import Alumnos, Inscripciones
 from django.contrib import messages
-from .forms import InscripcionForm
+from .forms import EditarDatosForm, InscripcionForm
 import datetime
 from decimal import Decimal
 
@@ -12,8 +12,6 @@ def dictfetchall(cursor):
     columns = [col[0] for col in cursor.description]
     return [dict(zip(columns, row)) for row in cursor.fetchall()]
 
-# Actualizar datos personales
-from alumnos.forms import AlumnoForm 
 
 @login_required
 def home(request):
@@ -25,13 +23,13 @@ def home(request):
 
     # Para Actualizar Datos
     if request.method == 'POST':
-        form = AlumnoForm(request.POST, instance=alumno)
+        form = EditarDatosForm(request.POST, instance=alumno)
         if form.is_valid():
             form.save() # Esto ejecuta el UPDATE Alumnos SET
             messages.success(request, 'Datos actualizados correctamente')
             return redirect('estudiantes_home')
     else:
-        form = AlumnoForm(instance=alumno)
+        form = EditarDatosForm(instance=alumno)
 
     return render(request, 'estudiantes/home.html', {
         'form': form,
